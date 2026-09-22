@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Rajdhani", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", monospace;
+
+  /* The Tactical Canvas */
+  --color-tactical-base: #0D1311;
+  --color-tactical-panel: #1A2421;
+  --color-tactical-grid: #2C3A35;
+  --color-tactical-steel: #E2EAF4;
+
+  /* The Operational Indicators - Dynamic CSS variables */
+  --color-accent-maintenance: #A7F3D0;
+  --color-train-premium: #FCD34D;
+  --color-train-modern: #38BDF8;
+  --color-status-caution: rgb(var(--status-caution));
+  --color-status-critical: rgb(var(--status-critical));
+  --color-status-nominal: rgb(var(--status-nominal));
+}
+
+@layer base {
+  :root {
+    --status-critical: 239 68 68;   /* #EF4444 Red */
+    --status-caution: 249 115 22;   /* #F97316 Orange */
+    --status-nominal: 52 211 153;   /* #34D399 Green */
+  }
+
+  /* Protanopia / Deuteranopia (Red-Green conflicts) -> Shift to Blue/Yellow scales */
+  [data-theme='protanopia'], [data-theme='deuteranopia'] {
+    --status-critical: 0 90 181;    /* #005AB5 Strong Blue */
+    --status-caution: 220 50 32;    /* #DC3220 High contrast Red/Orange */
+    --status-nominal: 255 194 10;   /* #FFC20A High visibility Yellow */
+  }
+
+  /* Tritanopia (Blue-Yellow conflicts) -> Shift to Red/Cyan scales */
+  [data-theme='tritanopia'] {
+    --status-critical: 228 37 54;   /* #E42536 Crimson */
+    --status-caution: 241 141 158;  /* #F18D9E Pink */
+    --status-nominal: 0 148 158;    /* #00949E Cyan */
+  }
+}
+
+:root {
+  color-scheme: dark;
+  font-family: var(--font-sans);
+}
+
+html, body, #root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0D1311;
+  color: #E2EAF4;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Custom Tactical Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #0D1311;
+}
+::-webkit-scrollbar-thumb {
+  background: #2C3A35;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A7F3D0;
+}
+
+/* Tactical Sliders */
+input[type='range'] {
+  width: 100%;
+  accent-color: #A7F3D0;
+}
+
+.tactical-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: #2C3A35;
+  outline: none;
+}
+
+.tactical-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #A7F3D0;
+  border: 2px solid #0D1311;
+  box-shadow: 0 0 10px rgba(167, 243, 208, 0.6);
+  cursor: pointer;
+}
+
+.tactical-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: #A7F3D0;
+  box-shadow: 0 0 10px rgba(167, 243, 208, 0.6);
+  cursor: pointer;
+}
+
+/* Tactical Primary Action Button */
+.tactical-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid #2C3A35;
+  background: linear-gradient(180deg, rgba(26, 36, 33, 0.9) 0%, rgba(13, 19, 17, 0.95) 100%);
+  color: #E2EAF4;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition: all 180ms ease;
+}
+
+.tactical-button:hover:not(:disabled) {
+  border-color: #A7F3D0;
+  box-shadow: 0 0 12px rgba(167, 243, 208, 0.3);
+  color: #A7F3D0;
+}
+
+.tactical-button:active:not(:disabled) {
+  transform: scale(0.98);
+}

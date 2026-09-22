@@ -1,0 +1,81 @@
+{
+  "blockId": "BLK-WR-042",
+  "department": "TMS",
+  "corridorArm": "WESTERN",
+  "defectType": "Rail Fracture",
+  "lengthKm": 3.0,
+  "hazardBadge": "EXTREME THERMAL EXPANSION (RAIL TEMP > 65 C)",
+  "severity": "RED",
+  "equipmentList": [
+    {
+      "id": "TMS-EQ-001",
+      "name": "70T Hydraulic Rail Tensor with Power Pack",
+      "category": "Tools",
+      "requiredQty": 1,
+      "unit": "units",
+      "isMandatory": true
+    },
+    {
+      "id": "TMS-EQ-002",
+      "name": "Alumino-Thermic (AT) Rail Welding Kit",
+      "category": "Tools",
+      "requiredQty": 3,
+      "unit": "kits",
+      "isMandatory": true
+    },
+    {
+      "id": "EQ-ENV-W01",
+      "name": "Infrared Digital Rail Thermometer (PRTG)",
+      "category": "Safety/Climate Gear",
+      "requiredQty": 2,
+      "unit": "units",
+      "isMandatory": true
+    },
+    {
+      "id": "EQ-ENV-W02",
+      "name": "Low-Friction Rail De-Stressing Rollers",
+      "category": "Tools",
+      "requiredQty": 65,
+      "unit": "nos",
+      "isMandatory": true
+    },
+    {
+      "id": "EQ-ENV-W03",
+      "name": "Electrolyte Hydration & Heat Stress Mitigation Packs",
+      "category": "Safety/Climate Gear",
+      "requiredQty": 34,
+      "unit": "kits",
+      "isMandatory": true
+    }
+  ],
+  "manpower": [
+    {
+      "roleId": "MP-TMS-01",
+      "designation": "Senior Section Engineer (SSE / P-Way)",
+      "quantity": 1,
+      "certification": "IRICEN Track Renewal Competency (Grade-I)",
+      "shiftHours": 4
+    },
+    {
+      "roleId": "MP-TMS-02",
+      "designation": "Junior Engineer (JE / P-Way)",
+      "quantity": 2,
+      "certification": "Thermal De-Stressing & LWR Supervisory Cert",
+      "shiftHours": 4
+    },
+    {
+      "roleId": "MP-TMS-03",
+      "designation": "Certified AT Welder (Technician)",
+      "quantity": 2,
+      "certification": "RDSO Approved Alumino-Thermic Welder Lic.",
+      "shiftHours": 4
+    },
+    {
+      "roleId": "MP-TMS-04",
+      "designation": "Track Maintainer Gr IV (Gangmen)",
+      "quantity": 9,
+      "certification": "Track Safety & Lookout Banner Flag Protocol",
+      "shiftHours": 4
+    }
+  ]
+}
