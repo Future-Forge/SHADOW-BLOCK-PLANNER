@@ -19,9 +19,10 @@ function Metrics({ value }: { value: Evaluation }) {
   return <div className="space-y-3">
     <p className="text-xs text-slate-400">Baseline: {value.baseline}. Same weather and work duration in both cases.</p>
     <div className="grid grid-cols-3 gap-3">
-      {[['Requested slot', value.baseline_delay_minutes], ['Planned slot', value.planned_delay_minutes], ['Minutes saved', value.delay_minutes_saved]].map(([label, amount]) => <div key={label} className={card}><div className="text-xs text-slate-400">{label}</div><div className="mt-1 text-2xl font-semibold">{amount}</div></div>)}
+      {[['Requested slot', value.baseline_delay_minutes], ['Planned slot', value.planned_delay_minutes], ['Minutes saved', value.delay_minutes_saved ?? 'N/A']].map(([label, amount]) => <div key={label} className={card}><div className="text-xs text-slate-400">{label}</div><div className="mt-1 text-2xl font-semibold">{amount}</div></div>)}
     </div>
     <p className="text-xs text-slate-400">Summed incremental train-delay minutes, not elapsed wall time. Weighted cost: {value.baseline_weighted_cost} → {value.planned_weighted_cost}. {value.feasible ? 'Scenario passes configured checks.' : 'Not feasible: these figures are not achievable savings.'}</p>
+    {!value.baseline_feasible && <p className="text-xs text-amber-300">The requested slot starts before a train has cleared. Baseline is infeasible; no savings claim is made.</p>}
   </div>;
 }
 
@@ -71,7 +72,7 @@ export function PlanningLab({ initialRequest, initialDecision, onClose }: {
   };
   const analyze = () => work(async () => setDecision(await planningFetch<BlockDecision>('/analyze-block', request)));
   const commit = () => work(async () => {
-    const result = await planningFetch<{ block_id: string; decision: BlockDecision }>('/commit-block', request);
+    const result = await planningFetch<{ block_id: string; decision: BlockDecision }>('/commit-block', { ...request, expected_start_iso: p?.start_iso });
     setDecision(result.decision);
     setMessage(`Saved ${result.block_id}. Resources reserved; this is a simulation, not a train-control command.`);
     await refreshOperations();

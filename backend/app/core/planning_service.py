@@ -140,6 +140,7 @@ def analyze(req, bundle, store, *, ignore_id=None):
 
     rows = comparison(selected)
     baseline = comparison(requested)
+    baseline_feasible = not any(entry < requested and leave + BUFFER > requested for _, entry, leave in conflicts_at(requested))
     total = lambda data: sum(r['block_delay_minutes'] for r in data)
     cost = lambda data: sum(r['block_delay_minutes'] * WEIGHTS[r['category']] for r in data)
     status = 'PENDING_REVIEW' if reasons else ('APPROVED_WITH_REGULATION' if total(rows) else 'APPROVED')
@@ -160,7 +161,8 @@ def analyze(req, bundle, store, *, ignore_id=None):
         'explanations': explanations, 'blocking_reasons': reasons, 'comparison': rows,
         'evaluation': {'baseline': 'Requested-time FIFO regulation with the same weather and duration',
             'baseline_delay_minutes': total(baseline), 'planned_delay_minutes': total(rows),
-            'delay_minutes_saved': total(baseline) - total(rows),
+            'delay_minutes_saved': total(baseline) - total(rows) if baseline_feasible and not reasons else None,
+            'baseline_feasible': baseline_feasible,
             'baseline_weighted_cost': cost(baseline), 'planned_weighted_cost': cost(rows),
             'feasible': not reasons, 'historical_outcome': False},
         'limitations': ['Planning simulation only; no live train commands or timetable deletion.',
@@ -172,3 +174,20 @@ def analyze(req, bundle, store, *, ignore_id=None):
         affected_trains=affected, asset_availability_index=max(0, 100 - max((r['total_delay_minutes'] for r in rows), default=0)),
         total_weighted_delay_cost=cost(rows), notes=' '.join(reasons) if reasons else 'Simulation plan ready for explicit commit. ' + explanations[-1],
         block_geometry=bundle.network.get_track_segment(a, b), planning=planning)
+
+
+def commit(req, bundle, store):
+    with store.transaction():
+        decision = analyze(req, bundle, store)
+        if decision.status.value not in ('APPROVED', 'APPROVED_WITH_REGULATION'):
+            raise HTTPException(409, decision.notes)
+        if req.expected_start_iso and req.expected_start_iso != decision.planning['start_iso']:
+            raise HTTPException(409, 'Availability changed since analysis. Analyze again to review the new window.')
+        operation = store.record(
+            department='+'.join(t['department'] for t in decision.planning['tasks']),
+            corridor=decision.planning['corridor'], from_station=canonical(req.from_station), to_station=canonical(req.to_station),
+            start_time=decision.block_window['start'].strftime('%H:%M:%S'),
+            duration_minutes=decision.planning['effective_duration_minutes'], operation_date=req.operation_date,
+            impacted_trains=(train.train_number for train in decision.affected_trains),
+            snapshot={'request': req.model_dump(mode='json'), 'decision': decision.model_dump(mode='json')})
+    return {'committed': True, 'block_id': operation.block_id, 'decision': decision}

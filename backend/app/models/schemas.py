@@ -153,6 +153,7 @@ class BlockRequest(BaseModel):
     department: Department
     criticality: Criticality
     operation_date: date = Field(default_factory=date.today)
+    expected_start_iso: Optional[str] = None
     shared_tasks: list[SharedTask] = Field(default_factory=list, max_length=2)
     parallel_work_confirmed: bool = False
     weather: WeatherScenario = Field(default_factory=WeatherScenario)

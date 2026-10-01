@@ -156,19 +156,8 @@ def analyze_block(req: BlockRequest, request: Request) -> BlockDecision:
 
 @router.post("/commit-block")
 def commit_block(req: BlockRequest, request: Request) -> dict:
-    store = request.app.state.operation_store
-    with store.transaction():
-        decision = analyze_block(req, request)
-        if decision.status not in (BlockDecisionStatus.APPROVED, BlockDecisionStatus.APPROVED_WITH_REGULATION):
-            raise HTTPException(409, decision.notes)
-        operation = store.record(
-            department='+'.join(t['department'] for t in decision.planning['tasks']),
-            corridor=decision.planning['corridor'], from_station=canonical(req.from_station), to_station=canonical(req.to_station),
-            start_time=decision.block_window['start'].strftime('%H:%M:%S'),
-            duration_minutes=decision.planning['effective_duration_minutes'], operation_date=req.operation_date,
-            impacted_trains=(train.train_number for train in decision.affected_trains),
-            snapshot={'request': req.model_dump(mode='json'), 'decision': decision.model_dump(mode='json')})
-    return {"committed": True, "block_id": operation.block_id, "decision": decision}
+    from app.core.planning_service import commit
+    return commit(req, request.app.state.gq_bundle, request.app.state.operation_store)
 
 
 @router.get('/operations')

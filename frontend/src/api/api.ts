@@ -130,6 +130,17 @@ export const GQ_CORRIDORS: Corridor[] = [
 ];
 
 // Helper to make an HTTP request with automatic 127.0.0.1 fallback
+export async function requestApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${currentBaseUrl}${endpoint}`, {
+    ...options, headers: { 'Content-Type': 'application/json', ...options?.headers },
+    signal: AbortSignal.timeout(60000),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail || data));
+  isLiveBackendAvailable = true;
+  return data as T;
+}
+
 async function fetchWithFallback<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const urlsToTry: string[] = [];
 
@@ -261,149 +272,6 @@ function simulateLiveTrains(simTimeStr: string): LiveTrainState[] {
 }
 
 
-function simulateDispatcherResponse(req: DispatcherChatRequest): DispatcherChatResponse {
-  const msg = req.message.toLowerCase();
-  const simTime = req.sim_time || "12:00:00";
-
-  // 1. Train Telemetry Inspection
-  const trainNumMatch = msg.match(/(?:train|rake|#)\s*(\d{4,5})/i) || msg.match(/\b(\d{5})\b/);
-  if ((msg.includes("inspect") || msg.includes("status") || msg.includes("locate") || msg.includes("where is")) && trainNumMatch) {
-    const num = trainNumMatch[1];
-    const fleet: Record<string, any> = {
-      "12951": { name: "Mumbai Rajdhani Express", cat: "PREMIUM", speed: 128, sec: "ST-BRC", lat: 21.85, lon: 73.05 },
-      "12953": { name: "August Kranti Rajdhani", cat: "PREMIUM", speed: 122, sec: "ST-BRC", lat: 22.02, lon: 73.12 },
-      "20901": { name: "Vande Bharat Express", cat: "PREMIUM", speed: 135, sec: "BCT-ST", lat: 20.60, lon: 72.95 },
-      "12841": { name: "Coromandel Express", cat: "SUPERFAST", speed: 110, sec: "VSKP-RJY", lat: 17.35, lon: 82.50 },
-      "84920": { name: "BOXN Coal Freight Rake", cat: "FREIGHT", speed: 72, sec: "BRC-ST", lat: 21.60, lon: 72.95 },
-    };
-    const tr = fleet[num] || {
-      name: `Special Express #${num}`,
-      cat: "SUPERFAST",
-      speed: 104,
-      sec: "ST-BRC",
-      lat: 21.75,
-      lon: 73.01,
-    };
-
-    return {
-      response_text: `🛰️ **TELEMETRY LOCK: #${num} ${tr.name}**\n\n- **Priority Tier:** \`${tr.cat}\` (Trunk Unit)\n- **Live Section:** \`${tr.sec}\`\n- **Telemetry Velocity:** \`${tr.speed} km/h\`\n- **Signal Aspect:** \`GREEN / NOMINAL HEADWAY\`\n- **Coordinates:** \`${tr.lat}°N, ${tr.lon}°E\`\n\n*Camera view sweeping to live rake telemetry.*`,
-      action_triggered: "TRAIN_INSPECT",
-      payload: {
-        train_number: num,
-        train_name: tr.name,
-        category: tr.cat,
-        current_section: tr.sec,
-        speed_kmph: tr.speed,
-        lat: tr.lat,
-        lon: tr.lon,
-        status: "RUNNING",
-      },
-      fly_to_target: { lat: tr.lat, lon: tr.lon, zoom: 11.0, pitch: 60, bearing: -15 },
-    };
-  }
-
-  // 2. Emergency Block Directive
-  const isEmergency = ["emergency", "fracture", "snag", "broken", "derail", "crack", "wire", "ohe", "halt", "freeze"].some((w) => msg.includes(w));
-  const isBlock = ["block", "lock", "halt", "stop", "freeze", "interruption"].some((w) => msg.includes(w));
-
-  // Station synonyms detection
-  const stationCodes: Record<string, string> = {
-    mumbai: "BCT",
-    bct: "BCT",
-    surat: "ST",
-    st: "ST",
-    vadodara: "BRC",
-    baroda: "BRC",
-    brc: "BRC",
-    delhi: "NDLS",
-    ndls: "NDLS",
-    kota: "KOTA",
-    ratlam: "RTM",
-    rtm: "RTM",
-    chennai: "MAS",
-    mas: "MAS",
-    howrah: "HWH",
-    hwh: "HWH",
-  };
-
-  const detected: string[] = [];
-  Object.entries(stationCodes).forEach(([term, code]) => {
-    if (msg.includes(term) && !detected.includes(code)) {
-      detected.push(code);
-    }
-  });
-
-  const fromCode = detected[0] || "ST";
-  const toCode = detected[1] || (fromCode === "ST" ? "BCT" : "ST");
-
-  if (isEmergency && isBlock) {
-    return {
-      response_text: `🚨 **EMERGENCY BLOCK ENFORCED: [${fromCode}] ➔ [${toCode}]**\n\n- **Block ID:** \`EMG-${fromCode}-${toCode}-${Date.now().toString().slice(-4)}\`\n- **Department:** \`TMS (Track Safety Tier 1)\`\n- **Section Status:** \`LOCKED / 3D ISOLATION ACTIVE\`\n- **Estimated Duration:** \`60 Minutes\`\n- **Safety Protocol:** Approaches restricted to 15 km/h caution order.\n\n### Regulation Directives:\n- **#12951 Mumbai Rajdhani**: \`HOLD IN LOOP\` at \`ST\` (+24 min delay)\n- **#59045 Surat Passenger**: \`DIVERT\` to Down loop line (+32 min delay)\n\n*Tactical 3D containment extruded on live map.*`,
-      action_triggered: "EXECUTE_BLOCK",
-      payload: {
-        block_id: `EMG-${fromCode}-${toCode}`,
-        from_station: fromCode,
-        to_station: toCode,
-        track_line: "UP",
-        department: "TMS",
-        criticality: "EMERGENCY",
-        duration_minutes: 60,
-        reason: "Emergency track/OHE hazard",
-        total_cascade_delay_minutes: 56.0,
-        affected_trains: [
-          { train_number: "12951", train_name: "Mumbai Rajdhani", action: "HOLD", location: fromCode, delay_minutes: 24 },
-          { train_number: "59045", train_name: "Surat Passenger", action: "DIVERT", location: fromCode, delay_minutes: 32 },
-        ],
-      },
-      fly_to_target: { lat: 20.5, lon: 72.85, zoom: 11.0, pitch: 60, bearing: -15 },
-    };
-  }
-
-  // 3. Gap Analysis Directive
-  if (isBlock || msg.includes("analyze") || msg.includes("gap") || msg.includes("window")) {
-    return {
-      response_text: `📊 **SHADOW BLOCK ANALYSIS: [${fromCode}] ➔ [${toCode}]**\n\n- **Recommended Window:** \`${simTime} — 13:00:00\` (60 min)\n- **Asset Availability Index:** \`96.5%\`\n- **Status:** \`APPROVED / ZERO-DELAY GAP CONFIRMED\`\n- **Shadow Opportunity:** Window merges with OHE catenary inspection; zero passenger headway clash.\n\n*Ready to commit into Golden Quadrilateral schedule matrix.*`,
-      action_triggered: "ANALYZE_GAP",
-      payload: {
-        from_station: fromCode,
-        to_station: toCode,
-        department: "TMS",
-        criticality: "NORMAL",
-        track_line: "UP",
-        block_window: { start: simTime, end: "13:00:00" },
-        status: "APPROVED",
-        duration_minutes: 60,
-        asset_availability_index: 96.5,
-        affected_trains: [],
-        shadow_merging_opportunity: "Dual-department TMS + TDMS maintenance window confirmed.",
-      },
-      fly_to_target: { lat: 21.75, lon: 73.01, zoom: 11.0, pitch: 60, bearing: -15 },
-    };
-  }
-
-  // 4. Resequence Directive
-  if (msg.includes("resequence") || msg.includes("priority") || msg.includes("clearance") || msg.includes("traffic")) {
-    return {
-      response_text: `🔄 **TRAFFIC RESEQUENCING MATRIX ACTIVE**\n\n- **Priority Directive:** \`Vande Bharat / Rajdhani (P1) > Superfast (P2) > Freight (P5)\`\n- **Dispatch Sequence:**\n  - **P1 #12953 August Kranti Rajdhani**: Depart \`13:00:00\` @ \`130 km/h\` (Mainline Cleared)\n  - **P2 #12841 Coromandel Express**: Depart \`13:04:00\` @ \`110 km/h\` (Caution Regulated)\n  - **P5 #84920 BOXN Coal Rake**: Depart \`13:08:00\` @ \`75 km/h\` (Held in Loop)\n- **Bottleneck Clearance:** \`12 minutes total\`\n\n*Headway buffers stabilized across trunk corridor.*`,
-      action_triggered: "RESEQUENCE",
-      payload: {
-        bottleneck_clearance_minutes: 12,
-        resequence_plan: [
-          { priority_rank: "P1", train_number: "12953", train_name: "August Kranti Rajdhani", dispatch_slot: "13:00:00", dynamic_speed_advice_kmph: 130 },
-          { priority_rank: "P2", train_number: "12841", train_name: "Coromandel Express", dispatch_slot: "13:04:00", dynamic_speed_advice_kmph: 110 },
-          { priority_rank: "P5", train_number: "84920", train_name: "BOXN Coal Rake", dispatch_slot: "13:08:00", dynamic_speed_advice_kmph: 75 },
-        ],
-      },
-    };
-  }
-
-  // Default controller guidance
-  return {
-    response_text: `👮 **AI CHIEF DISPATCHER STANDING BY.**\n\nCommand links active across all 4 Golden Quadrilateral trunk corridors. Transmit tactical directives:\n- *"Emergency block Surat to Mumbai Central due to OHE wire snag"*\n- *"Analyze 60min TMS maintenance block between Vadodara and Surat"*\n- *"Inspect real-time status of Train 12953"*\n- *"Resequence corridor traffic according to P1 hierarchy"*`,
-    action_triggered: "NONE",
-    payload: {},
-  };
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EXPORTED API CLIENT INTERFACE
@@ -547,7 +415,7 @@ export const api = {
 
   // 2. POST /api/v1/planner/analyze-block
   analyzeBlock: async (request: BlockRequest): Promise<BlockDecision> => {
-      return await fetchWithFallback<BlockDecision>("/api/v1/planner/analyze-block", {
+      return await requestApi<BlockDecision>("/api/v1/planner/analyze-block", {
         method: "POST",
         body: JSON.stringify(request),
       });
@@ -555,7 +423,7 @@ export const api = {
 
   // Commit block
   commitBlock: async (request: BlockRequest): Promise<{ committed: boolean; block_id: string; decision: BlockDecision }> => {
-      return await fetchWithFallback<{ committed: boolean; block_id: string; decision: BlockDecision }>("/api/v1/planner/commit-block", {
+      return await requestApi<{ committed: boolean; block_id: string; decision: BlockDecision }>("/api/v1/planner/commit-block", {
         method: "POST",
         body: JSON.stringify(request),
       });
@@ -682,28 +550,15 @@ export const api = {
 
   // AI Dispatcher Chat (Autonomous Section Controller & AI Chief Dispatcher)
   chatDispatcher: async (req: DispatcherChatRequest): Promise<DispatcherChatResponse> => {
-    try {
-      return await fetchWithFallback<DispatcherChatResponse>("/api/v1/chat/dispatcher", {
+      return await requestApi<DispatcherChatResponse>("/api/v1/chat/dispatcher", {
         method: "POST",
         body: JSON.stringify(req),
       });
-    } catch {
-      return simulateDispatcherResponse(req);
-    }
   },
 
   // Health check
   health: async (): Promise<HealthResponse> => {
-    try {
-      return await fetchWithFallback<HealthResponse>("/api/v1/health");
-    } catch {
-      return {
-        status: "ok",
-        stations_loaded: 28,
-        trains_loaded: 8512,
-        indexed_block_sections: 42,
-      };
-    }
+      return await requestApi<HealthResponse>("/api/v1/health");
   },
 };
 

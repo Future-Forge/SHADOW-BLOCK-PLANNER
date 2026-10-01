@@ -35,7 +35,9 @@ logger = logging.getLogger(__name__)
 SYSTEM_INSTRUCTION = """You are the Chief AI Dispatcher for the Indian Railways Shadow Block network. You manage track maintenance (TMS, SMMS, TDMS) and traffic across the Golden Quadrilateral. 
 1. If the user asks general operational questions, railway definitions, or seeks advice, answer conversationally in a crisp, highly professional, military-tactical tone. Use Markdown for formatting.
 2. If the user implies an action (e.g., creating a block, pulling a report, checking a specific train), do NOT answer with text. Instead, instantly call the appropriate provided function/tool to execute the task. 
-3. Never apologize. Be concise, deterministic, and highly accurate."""
+3. Respect tool statuses exactly. Never claim a rejected/pending plan is approved or that simulated holds are real commands.
+4. Weather and resource results are scenarios, not forecasts or operational clearance. Shared work requires explicit compatibility confirmation. Use Planning Lab for date, shared-task, weather and resource inputs.
+5. Be concise and accurate."""
 
 STATION_SYNONYMS: dict[str, str] = {
     # Mumbai Cluster
@@ -500,72 +502,29 @@ def create_dispatcher_tools(ctx: DispatcherExecutionContext) -> dict[str, Any]:
         return json.dumps({"search_query": query, "count": len(matches), "trains": matches})
 
     def analyze_shadow_block(
-        from_station: str,
-        to_station: str = "",
-        duration: int = 60,
-        department: str = "TMS",
-        requested_time: str = "12:00:00",
-        criticality: str = "NORMAL",
-        **kwargs: Any,
+        from_station: str, to_station: str = "", duration: int = 60,
+        department: str = "TMS", requested_time: str = "12:00:00",
+        criticality: str = "NORMAL", **kwargs: Any,
     ) -> str:
-        """Analyze timetable capacity, find headway gaps, and assess disruption for a planned railway shadow block."""
-        actual_duration = int(kwargs.get("duration_minutes", duration))
+        """Analyze a simulation using the same weather, resource and conflict rules as Planning Lab."""
+        from app.core.planning_service import analyze
         from_code = normalize_station(from_station)
-        to_code = normalize_station(to_station) if to_station else ""
-
-        if not to_code or to_code == from_code:
-            to_code = ADJACENT_GQ_HUBS.get(from_code, "BRC")
-
-        try:
-            leg_id = same_leg(from_code, to_code, network.station_leg_index) or "WEST"
-        except Exception:
-            leg_id = "WEST"
-
-        track_line = resolve_track_line(leg_id, from_code, to_code) or TrackLine.UP
-        req_time = requested_time if requested_time and requested_time != "12:00:00" else ctx.sim_time
-        req_min = str_or_time_to_minutes(req_time)
-
-        st_a = network.stations.get(from_code)
-        st_b = network.stations.get(to_code)
-        if st_a and st_b:
-            ctx.fly_to_target = FlyToTarget(
-                lat=round((st_a.lat + st_b.lat) / 2, 5),
-                lon=round((st_a.lon + st_b.lon) / 2, 5),
-                zoom=11.0,
-            )
-
-        crit_enum = Criticality(criticality.upper()) if criticality.upper() in Criticality._value2member_map_ else Criticality.NORMAL
-        dept_enum = Department(department.upper()) if department.upper() in Department._value2member_map_ else Department.TMS
-
-        gf = GapFinder(timetable)
-        best = gf.best_gap_near(leg_id, track_line, from_code, to_code, req_min, actual_duration)
-
-        affected = []
-        status = "APPROVED" if best else "APPROVED_WITH_REGULATION"
-        window_start = req_time
-        window_end = minutes_to_timestr((req_min + actual_duration) % 1440)
-
-        if best:
-            window_start = minutes_to_timestr(best.start_min % 1440)
-            window_end = minutes_to_timestr((best.start_min + actual_duration) % 1440)
-
-        track_geometry = network.get_track_segment(from_code, to_code)
+        to_code = normalize_station(to_station) if to_station else ADJACENT_GQ_HUBS.get(from_code, "BRC")
+        leg_id = same_leg(from_code, to_code, network.station_leg_index)
+        if not leg_id:
+            raise ValueError('Stations must share a tracked corridor.')
+        req = BlockRequest(
+            from_station=from_code, to_station=to_code,
+            track_line=resolve_track_line(leg_id, from_code, to_code) or TrackLine.UP,
+            requested_time=requested_time or ctx.sim_time,
+            duration_minutes=int(kwargs.get("duration_minutes", duration)),
+            department=department.upper(), criticality=criticality.upper(),
+            **{key: kwargs[key] for key in ("operation_date", "weather", "shared_tasks", "parallel_work_confirmed", "resource_capacity") if key in kwargs},
+        )
+        decision = analyze(req, ctx.bundle, operation_store)
         ctx.action_triggered = "ANALYZE_GAP"
-        ctx.payload = {
-            "from_station": from_code,
-            "to_station": to_code,
-            "department": dept_enum.value,
-            "criticality": crit_enum.value,
-            "track_line": track_line.value,
-            "block_window": {"start": window_start, "end": window_end},
-            "status": status,
-            "duration_minutes": actual_duration,
-            "asset_availability_index": 96.5 if best else 78.0,
-            "affected_trains": affected,
-            "block_geometry": track_geometry,
-            "shadow_merging_opportunity": f"Slot allows simultaneous {dept_enum.value} + SMMS dual-maintenance without additional headway penalty.",
-        }
-
+        ctx.payload = {**req.model_dump(mode="json"), **decision.model_dump(mode="json"),
+                       "request": req.model_dump(mode="json"), "decision": decision.model_dump(mode="json")}
         return json.dumps(ctx.payload)
 
     def generate_monthly_report(
@@ -661,94 +620,25 @@ def create_dispatcher_tools(ctx: DispatcherExecutionContext) -> dict[str, Any]:
         return json.dumps({"error": f"Train #{clean_num} not found in Golden Quadrilateral timetable index."})
 
     def execute_emergency_block(
-        from_station: str,
-        to_station: str = "",
-        department: str = "TMS",
-        reason: str = "Emergency track / OHE hazard",
-        **kwargs: Any,
+        from_station: str, to_station: str = "", department: str = "TMS",
+        reason: str = "Emergency track / OHE hazard", **kwargs: Any,
     ) -> str:
-        """Immediately lock a block section on the live 3D tactical map, issue hold/caution orders, and calculate cascade delays."""
-        from_code = normalize_station(from_station)
-        to_code = normalize_station(to_station) if to_station else ""
-        if not to_code or to_code == from_code:
-            to_code = ADJACENT_GQ_HUBS.get(from_code, "BRC")
-
-        try:
-            leg_id = same_leg(from_code, to_code, network.station_leg_index) or "WEST"
-        except Exception:
-            leg_id = "WEST"
-
-        track_line = resolve_track_line(leg_id, from_code, to_code) or TrackLine.UP
-        incident_min = str_or_time_to_minutes(ctx.sim_time)
-
-        st_a = network.stations.get(from_code)
-        st_b = network.stations.get(to_code)
-        if st_a and st_b:
-            ctx.fly_to_target = FlyToTarget(
-                lat=round((st_a.lat + st_b.lat) / 2, 5),
-                lon=round((st_a.lon + st_b.lon) / 2, 5),
-                zoom=11.0,
-            )
-
-        train_names = {num: t.name for num, t in timetable.trains.items()}
-        for f_num, f_info in FLAGSHIP_FLEET.items():
-            if f_num not in train_names:
-                train_names[f_num] = f_info["name"]
-
-        result = dispatch_emergency_block(
-            network=network,
-            timetable=timetable,
-            leg_id=leg_id,
-            track_line=track_line,
-            from_code=from_code,
-            to_code=to_code,
-            incident_min=incident_min,
-            duration_minutes=60,
-            train_names=train_names,
-        )
-
-        orders_summary = [
-            {
-                "train_number": o.train_number,
-                "train_name": o.train_name,
-                "action": o.action.value,
-                "location": o.location,
-                "delay_minutes": o.cascade_delay_minutes,
-                "instruction": o.instruction,
-            }
-            for o in result.hold_orders[:6]
-        ]
-
-        track_geometry = network.get_track_segment(from_code, to_code)
+        """Simulate an emergency request; never bypass weather, clearance or resources."""
+        from app.core.planning_service import commit
+        analyze_shadow_block(from_station, to_station, duration=60, department=department,
+                             requested_time=ctx.sim_time, criticality="EMERGENCY", **kwargs)
+        req = BlockRequest.model_validate(ctx.payload["request"])
+        if ctx.payload["status"] not in ("APPROVED", "APPROVED_WITH_REGULATION") or operation_store is None:
+            return json.dumps(ctx.payload)
+        result = commit(req, ctx.bundle, operation_store)
+        decision = result["decision"]
         ctx.action_triggered = "EXECUTE_BLOCK"
-        ctx.payload = {
-            "block_id": result.block_id,
-            "from_station": from_code,
-            "to_station": to_code,
-            "track_line": track_line.value,
-            "locked_at": result.locked_at.strftime("%H:%M:%S") if hasattr(result.locked_at, "strftime") else str(result.locked_at),
-            "department": department.upper(),
-            "criticality": "EMERGENCY",
-            "duration_minutes": 60,
-            "reason": reason,
-            "total_cascade_delay_minutes": result.total_cascade_delay_minutes,
-            "hold_orders": orders_summary,
-            "affected_trains": orders_summary,
-            "block_geometry": track_geometry,
-        }
-
-        if operation_store is not None:
-            operation = operation_store.record(
-                department=department.upper(),
-                corridor=leg_id,
-                from_station=from_code,
-                to_station=to_code,
-                start_time=ctx.sim_time,
-                duration_minutes=60,
-                impacted_trains=(order["train_number"] for order in orders_summary),
-            )
-            ctx.payload["block_id"] = operation.block_id
-
+        ctx.payload.update(block_id=result["block_id"], reason=reason,
+            decision=decision.model_dump(mode="json"), locked_at=ctx.sim_time,
+            total_cascade_delay_minutes=sum(t.delay_minutes for t in decision.affected_trains),
+            hold_orders=[{"train_number": t.train_number, "train_name": t.train_name,
+                "action": t.action.value, "location": t.hold_station or req.from_station,
+                "delay_minutes": t.delay_minutes} for t in decision.affected_trains])
         return json.dumps(ctx.payload)
 
     def resequence_traffic(
@@ -927,7 +817,8 @@ def deterministic_dispatcher_fallback(
     if is_emergency and is_block and len(detected_stations) >= 1:
         from_st = detected_stations[0]
         to_st = detected_stations[1] if len(detected_stations) > 1 else ADJACENT_GQ_HUBS.get(from_st, "BRC")
-        raw_res = tools["execute_emergency_block"](from_st, to_st, "TMS", "Emergency hazard containment")
+        dept = 'TDMS' if 'ohe' in msg or 'traction' in msg else 'TMS'
+        raw_res = tools["execute_emergency_block"](from_st, to_st, dept, "Emergency hazard containment")
         data = json.loads(raw_res)
 
         hold_lines = ""
@@ -936,17 +827,12 @@ def deterministic_dispatcher_fallback(
 
         return DispatcherChatResponse(
             response_text=(
-                f"### 🚨 EMERGENCY BLOCK ENFORCED: [{data['from_station']}] ➔ [{data['to_station']}]\n\n"
-                f"- **Block ID:** `{data['block_id']}`\n"
-                f"- **Department:** `TMS (Track Safety Tier 1)`\n"
-                f"- **Section Status:** `LOCKED / 3D ISOLATION ACTIVE`\n"
-                f"- **Estimated Hold Window:** `60 Minutes`\n"
-                f"- **Cascade Headway Cost:** `+{data.get('total_cascade_delay_minutes', 0)} min`\n\n"
-                f"#### Traffic Regulation Orders Issued:\n"
-                f"{hold_lines or '- No immediately approaching traffic inside safety buffer.'}\n\n"
-                f"*3D Tactical containment pillars extruded. Approaches restricted to 15 km/h caution.*"
+                f"### Emergency simulation: [{data['from_station']}] → [{data['to_station']}]\n\n"
+                f"Status: **{data['status']}**. Block ID: {data.get('block_id', 'not committed')}.\n\n"
+                f"{data.get('notes', '')}\n\n{hold_lines}\n"
+                f"Simulation only. No live traffic orders issued. Review weather and resources in Planning Lab."
             ),
-            action_triggered="EXECUTE_BLOCK",
+            action_triggered=ctx.action_triggered,
             payload=data,
             fly_to_target=ctx.fly_to_target,
         )
@@ -981,9 +867,9 @@ def deterministic_dispatcher_fallback(
                 f"- **Recommended Window:** `{data['block_window']['start']} - {data['block_window']['end']}` ({data['duration_minutes']} min)\n"
                 f"- **Asset Availability Index:** `{data['asset_availability_index']}%`\n"
                 f"- **Department Assigned:** `{data['department']}`\n"
-                f"- **Headway Status:** `APPROVED / OPTIMAL GAP CONFIRMED`\n"
-                f"- **Shadow Merging:** {data.get('shadow_merging_opportunity', 'Single window shared across civil & OHE teams.')}\n\n"
-                f"*Mathematical solver confirms zero cascade delay for P1/P2 rakes. Section ready for execution.*"
+                f"- **Status:** `{data['status']}`\n"
+                f"- **Assessment:** {data.get('notes', '')}\n\n"
+                f"Simulation only. Configure shared tasks, date, weather and resources in Planning Lab before committing."
             ),
             action_triggered="ANALYZE_GAP",
             payload=data,

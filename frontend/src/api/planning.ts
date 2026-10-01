@@ -1,11 +1,12 @@
-import { getApiBaseUrl } from './api';
+import { requestApi } from './api';
 import type { BlockDecision, BlockRequest } from './types';
 
 export interface Evaluation {
   baseline: string;
   baseline_delay_minutes: number;
   planned_delay_minutes: number;
-  delay_minutes_saved: number;
+  delay_minutes_saved: number | null;
+  baseline_feasible: boolean;
   baseline_weighted_cost: number;
   planned_weighted_cost: number;
   feasible: boolean;
@@ -35,13 +36,10 @@ export interface Operation {
 export interface Replay { block_id: string; original?: Evaluation; replay: Evaluation; explanations: string[]; limitations: string[] }
 
 export async function planningFetch<T>(path: string, body?: unknown): Promise<T> {
-  const response = await fetch(`${getApiBaseUrl()}/api/v1/planner${path}`, {
+  return requestApi<T>(`/api/v1/planner${path}`, {
     method: body === undefined ? 'GET' : 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
     signal: AbortSignal.timeout(60000),
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail || data));
-  return data as T;
 }

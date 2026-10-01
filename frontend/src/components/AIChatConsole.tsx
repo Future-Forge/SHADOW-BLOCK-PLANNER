@@ -205,60 +205,13 @@ export const AIChatConsole: React.FC<AIChatConsoleProps> = ({
         );
       }
 
-      // If Emergency Block was executed, automatically extrude on 3D Deck.gl Map!
-      if (response.action_triggered === 'EXECUTE_BLOCK' && response.payload && onExecuteBlock) {
-        const p = response.payload;
-        const blockReq: BlockRequest = {
-          from_station: p.from_station || 'ST',
-          to_station: p.to_station || 'BCT',
-          track_line: p.track_line || 'UP',
-          requested_time: simTime,
-          duration_minutes: p.duration_minutes || 60,
-          department: p.department || 'TMS',
-          criticality: 'EMERGENCY',
-        };
-
-        const decision: BlockDecision = {
-          status: 'APPROVED',
-          block_window: {
-            start: simTime,
-            end: '13:00:00',
-          },
-          affected_trains: (p.affected_trains || []).map((t: any) => ({
-            train_number: t.train_number,
-            train_name: t.train_name,
-            category: 'PREMIUM',
-            action: t.action || 'HOLD',
-            hold_station: t.location || p.from_station,
-            delay_minutes: t.delay_minutes || 20,
-          })),
-          max_available_gap_nearby: null,
-          asset_availability_index: 78.0,
-          total_weighted_delay_cost: p.total_cascade_delay_minutes || 56.0,
-          notes: `EMERGENCY BLOCK ENFORCED VIA AI DISPATCHER. Reason: ${p.reason || 'Hazard containment'}`,
-          block_geometry: p.block_geometry || undefined,
-        };
-
-        onExecuteBlock(blockReq, decision);
+      // Backend decisions are authoritative; never fabricate approval or timing.
+      const payload = response.payload;
+      if (response.action_triggered === 'EXECUTE_BLOCK' && payload?.decision && payload?.request && onExecuteBlock) {
+        onExecuteBlock(payload.request as BlockRequest, { ...payload.decision, block_id: payload.block_id } as BlockDecision);
       }
-
-      // If Gap Analysis was performed, update solver card
-      if (response.action_triggered === 'ANALYZE_GAP' && response.payload && onApplyDecision) {
-        const p = response.payload;
-        const decision: BlockDecision = {
-          status: p.status === 'APPROVED' ? 'APPROVED' : 'APPROVED_WITH_REGULATION',
-          block_window: p.block_window || { start: simTime, end: '13:00:00' },
-          affected_trains: p.affected_trains || [],
-          max_available_gap_nearby: {
-            start: p.block_window?.start || simTime,
-            end: p.block_window?.end || '13:00:00',
-            duration_minutes: p.duration_minutes || 60,
-          },
-          asset_availability_index: p.asset_availability_index || 96.5,
-          total_weighted_delay_cost: 0,
-          notes: p.shadow_merging_opportunity || 'Shadow gap validated by Gemini.',
-        };
-        onApplyDecision(decision);
+      if (response.action_triggered === 'ANALYZE_GAP' && payload?.decision && onApplyDecision) {
+        onApplyDecision(payload.decision as BlockDecision);
       }
     } catch (err: any) {
       setMessages((prev) => [
