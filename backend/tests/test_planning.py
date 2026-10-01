@@ -160,6 +160,16 @@ def test_normal_selects_nearest_clearance_gap_and_explains(store):
     assert decision.planning['explanations']
 
 
+def test_evaluation_reports_computed_savings_for_feasible_baseline(store):
+    b = bundle([train(stops=[('BRC', '12:10', '12:10', 1), ('ST', '12:20', '12:20', 1)])])
+    result = analyze(request(), b, store)
+    metrics = result.planning['evaluation']
+    assert metrics['baseline_feasible']
+    assert metrics['baseline_delay_minutes'] == 25
+    assert metrics['planned_delay_minutes'] == 0
+    assert metrics['delay_minutes_saved'] == 25
+
+
 def test_overnight_reservations_release_on_close(store):
     b = bundle()
     first = commit(request(requested_time='23:50', criticality='MAJOR'), b, store)

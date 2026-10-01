@@ -5,7 +5,7 @@ from math import ceil
 from fastapi import HTTPException
 
 from app.data.gq_corridors import STATION_ALIASES, same_leg
-from app.core.timetable_engine import time_to_minutes, minutes_to_time
+from app.core.timetable_engine import minutes_to_time
 from app.core.weather_constraints import assess_weather
 from app.core.sector_occupancy import coverage_gaps
 from app.models.schemas import BlockDecision, AffectedTrain

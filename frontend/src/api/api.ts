@@ -363,43 +363,9 @@ export const api = {
 
   // Chrono-Spatial Traffic Preview: POST /api/v1/planner/preview-traffic
   previewTraffic: async (req: TrafficPreviewRequest): Promise<TrafficPreviewResponse> => {
-    try {
-      return await fetchWithFallback<TrafficPreviewResponse>("/api/v1/planner/preview-traffic", {
-        method: "POST",
-        body: JSON.stringify(req),
-      });
-    } catch {
-      // Offline simulation fallback
-      return {
-        from_station: req.from_station,
-        to_station: req.to_station,
-        track_line: req.track_line || "UP",
-        requested_time: req.requested_time,
-        duration_minutes: req.duration_minutes,
-        projected_traffic_count: 2,
-        summary_by_category: { PREMIUM: 1, SUPERFAST: 1 },
-        trains: [
-          {
-            train_number: "12953",
-            train_name: "August Kranti Rajdhani",
-            category: "PREMIUM",
-            scheduled_pass_time: req.requested_time,
-            direction: req.track_line || "UP",
-            conflict: true,
-            delay_minutes: 0,
-          },
-          {
-            train_number: "20901",
-            train_name: "Vande Bharat Express",
-            category: "SUPERFAST",
-            scheduled_pass_time: req.requested_time,
-            direction: req.track_line || "UP",
-            conflict: true,
-            delay_minutes: 0,
-          },
-        ],
-      };
-    }
+    return requestApi<TrafficPreviewResponse>("/api/v1/planner/preview-traffic", {
+      method: "POST", body: JSON.stringify(req),
+    });
   },
 
   // Single corridor details

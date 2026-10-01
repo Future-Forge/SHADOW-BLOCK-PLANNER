@@ -298,7 +298,8 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const refreshOperations = useCallback(async () => {
     const records = await planningFetch<Operation[]>('/operations');
     setActiveBlocks(records.filter(op => op.status === 'ACTIVE' && op.snapshot).map(op => ({
-      id: op.block_id, request: op.snapshot!.request, decision: op.snapshot!.decision, committedAt: op.created_at,
+      id: op.block_id, request: { ...op.snapshot!.request, requested_time: op.start_time, duration_minutes: op.duration_minutes },
+      decision: op.snapshot!.decision, committedAt: op.created_at,
     })));
   }, []);
 
@@ -307,11 +308,13 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [refreshOperations]);
 
   const commitActiveBlock = (request: BlockRequest, decision: BlockDecision, id?: string) => {
+    if (!['APPROVED', 'APPROVED_WITH_REGULATION'].includes(decision.status)) return;
     setActiveBlocks((blocks) => [
       ...blocks,
       {
         id: id || decision.block_id || `${request.from_station}-${request.to_station}-${Date.now()}`,
-        request,
+        request: { ...request, requested_time: decision.block_window.start,
+          duration_minutes: decision.planning?.effective_duration_minutes ?? request.duration_minutes },
         decision,
         committedAt: new Date().toISOString(),
       },

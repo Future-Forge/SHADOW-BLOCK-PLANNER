@@ -70,6 +70,13 @@ function AppShell() {
   const [endpointInput, setEndpointInput] = useState(getApiBaseUrl());
   const [isBackendAlive, setIsBackendAlive] = useState(isConnectedToBackend());
 
+  useEffect(() => {
+    let cancelled = false;
+    api.health().then(() => { if (!cancelled) setIsBackendAlive(true); })
+      .catch(() => { if (!cancelled) setIsBackendAlive(false); });
+    return () => { cancelled = true; };
+  }, []);
+
   const checkConnection = async () => {
     try {
       await api.health();
