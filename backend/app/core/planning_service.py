@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from app.data.gq_corridors import STATION_ALIASES, same_leg
 from app.core.timetable_engine import time_to_minutes, minutes_to_time
 from app.core.weather_constraints import assess_weather
+from app.core.sector_occupancy import coverage_gaps
 from app.models.schemas import BlockDecision, AffectedTrain
 
 BUFFER = 5  # Illustrative planning headway, not an approved signalling rule.
@@ -35,7 +36,7 @@ def analyze(req, bundle, store, *, ignore_id=None):
     base_duration = max(t['duration_minutes'] for t in tasks) if req.parallel_work_confirmed else separate_duration
     weather = assess_weather(req, stations, base_duration, departments)
     duration = weather['adjusted_duration_minutes']
-    requested = time_to_minutes(req.requested_time)
+    requested = req.requested_time.hour * 60 + req.requested_time.minute
     midnight = datetime.combine(req.operation_date, datetime.min.time())
     required = {f'{d}_crew': 1 for d in departments}
     required.update(equipment_sets=len(tasks), vehicles=1)
@@ -102,6 +103,9 @@ def analyze(req, bundle, store, *, ignore_id=None):
     conflicts = conflicts_at(selected)
     inside = [c.train_number for c, entry, leave in conflicts if entry < selected and leave + BUFFER > selected]
     reasons = []
+    missing_coverage = coverage_gaps(bundle.timetable, req.track_line, km, low, high)
+    if missing_coverage:
+        reasons.append('Timetable coverage is incomplete on this section/line. No clear-track approval can be inferred from missing data.')
     if weather['restricted']:
         reasons.append(weather['reason'])
     if overlaps:
@@ -152,6 +156,7 @@ def analyze(req, bundle, store, *, ignore_id=None):
     explanations.extend(reasons or ['Resource and overlap checks passed against the current simulation ledger.'])
     planning = {
         'version': 1, 'operation_date': str(req.operation_date), 'corridor': leg,
+        'missing_coverage_km': missing_coverage,
         'start_iso': (midnight + timedelta(minutes=selected)).isoformat(),
         'end_iso': (midnight + timedelta(minutes=selected + duration)).isoformat(),
         'effective_duration_minutes': duration, 'tasks': tasks,

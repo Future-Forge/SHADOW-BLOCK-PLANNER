@@ -7,7 +7,7 @@ from app.data.gq_corridors import STATION_ALIASES
 
 
 def sector_conflicts(engine, track_line, from_code, to_code, start, end, km, operation_date=None):
-    from app.core.timetable_engine import SectorConflict, minutes_to_time, time_to_minutes
+    from app.core.timetable_engine import SectorConflict, minutes_to_time, time_to_minutes_float
 
     canonical = lambda code: STATION_ALIASES.get(code.upper(), code.upper())
     from_code, to_code = canonical(from_code), canonical(to_code)
@@ -33,8 +33,8 @@ def sector_conflicts(engine, track_line, from_code, to_code, start, end, km, ope
                     spans.append(current)
                     current = None
                 continue
-            dep = time_to_minutes(t1) + (a.day - 1) * 1440
-            arr = time_to_minutes(t2) + (b.day - 1) * 1440
+            dep = time_to_minutes_float(t1) + (a.day - 1) * 1440
+            arr = time_to_minutes_float(t2) + (b.day - 1) * 1440
             while arr < dep:
                 arr += 1440
             fractions = sorted(((left - ka) / (kb - ka), (right - ka) / (kb - ka)))
@@ -65,3 +65,27 @@ def sector_conflicts(engine, track_line, from_code, to_code, start, end, km, ope
                     minutes_to_time(shifted_entry), shifted_entry, shifted_exit, line, (origin, destination)))
     # Hops separated by off-corridor data remain distinct; do not invent coverage.
     return sorted(results, key=lambda c: (c.pass_entry_min, c.train_number))
+
+
+def coverage_gaps(engine, line, km, low, high):
+    """Spatial coverage evidence, not a claim that the timetable is exhaustive."""
+    spans = []
+    for train in engine.trains.values():
+        for a, b in zip(train.route, train.route[1:]):
+            ka = km.get(STATION_ALIASES.get(a.station_code, a.station_code))
+            kb = km.get(STATION_ALIASES.get(b.station_code, b.station_code))
+            if ka is None or kb is None or ka == kb or not (a.departure or a.arrival) or not (b.arrival or b.departure):
+                continue
+            if (TrackLine.UP if ka < kb else TrackLine.DOWN) != line:
+                continue
+            left, right = max(min(ka, kb), low), min(max(ka, kb), high)
+            if left < right:
+                spans.append((left, right))
+    cursor, missing = low, []
+    for left, right in sorted(spans):
+        if left > cursor:
+            missing.append([cursor, left])
+        cursor = max(cursor, right)
+    if cursor < high:
+        missing.append([cursor, high])
+    return missing

@@ -24,14 +24,14 @@ def train(number='1', stops=None, days=None):
             for i, (code, arr, dep, day) in enumerate(stops)])
 
 
-def bundle(trains=()):
+def bundle(trains=None):
     stations = [SimpleNamespace(code=code, cumulative_km=km, lat=22 - i, lon=73)
                 for i, (code, km) in enumerate([('BRC', 0), ('MID', 50), ('ST', 100)])]
     network = SimpleNamespace(corridors={'WEST': SimpleNamespace(stations=stations)},
         station_leg_index={s.code: [('WEST', i)] for i, s in enumerate(stations)},
         get_track_segment=lambda a, b: [[73, 22], [73, 20]])
     engine = TimetableEngine()
-    engine.load_trains(list(trains))
+    engine.load_trains(list(trains) if trains is not None else [train(stops=[('BRC', '01:00', '01:00', 1), ('ST', '01:10', '01:10', 1)])])
     engine.corridor_km_maps = {'WEST': {s.code: s.cumulative_km for s in stations}}
     return SimpleNamespace(network=network, timetable=engine)
 
@@ -214,3 +214,33 @@ def test_http_preview_validation_commit_history_and_replay(store):
 def test_duplicate_department_rejected(store):
     with pytest.raises(HTTPException):
         analyze(request(shared_tasks=[{'department': 'TMS', 'duration_minutes': 20}]), bundle(), store)
+
+
+def test_missing_timetable_coverage_does_not_look_like_a_clear_track(store):
+    result = analyze(request(), bundle([]), store)
+    assert result.status.value == 'PENDING_REVIEW'
+    assert result.planning['missing_coverage_km'] == [[0, 100]]
+
+
+def test_configured_monthly_wind_and_rain_combination(store):
+    result = analyze(request(department='TDMS', weather={'mode': 'seasonal', 'wind_risk_months': [7]}), bundle(), store)
+    assert result.planning['weather']['condition'] == 'rain_and_wind'
+    assert result.planning['weather']['restricted']
+    assert result.status.value == 'PENDING_REVIEW'
+
+
+def test_dispatcher_uses_same_ledger_and_cannot_bypass_weather(store):
+    import json
+    from app.core.gemini_agent import DispatcherExecutionContext, create_dispatcher_tools
+    b = bundle()
+    b.operation_store = store
+    ctx = DispatcherExecutionContext(b)
+    tools = create_dispatcher_tools(ctx)
+    result = json.loads(tools['execute_emergency_block']('BRC', 'ST', 'TDMS', weather={'mode': 'high_wind'}))
+    assert result['status'] == 'PENDING_REVIEW'
+    assert ctx.action_triggered == 'ANALYZE_GAP'
+    assert not store.list()
+    result = json.loads(tools['execute_emergency_block']('BRC', 'ST', 'TMS', weather={'mode': 'clear'}))
+    assert result['block_id'] == store.list()[0]['block_id']
+    assert store.list()[0]['snapshot']['decision']['planning']
+    assert ctx.action_triggered == 'EXECUTE_BLOCK'
