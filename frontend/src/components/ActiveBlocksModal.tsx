@@ -17,6 +17,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { api } from '../api/api';
+import { BlockClearView } from './BlockClearView';
 import { useSimulation } from '../store/SimulationContext';
 import type { ActiveBlock, BlockResourceData, EquipmentCategory } from '../api/types';
 
@@ -37,6 +38,7 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
   const [resourceLoadingIds, setResourceLoadingIds] = useState<Record<string, boolean>>({});
   const [checkedResourceItems, setCheckedResourceItems] = useState<Record<string, Record<string, boolean>>>({});
   const [allocatedBlockIds, setAllocatedBlockIds] = useState<Record<string, boolean>>({});
+  const [clearViewBlockId, setClearViewBlockId] = useState<string | null>(null);
 
   // Dynamically tick live countdown timer every second
   useEffect(() => {
@@ -53,12 +55,13 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        if (clearViewBlockId) setClearViewBlockId(null);
+        else onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, clearViewBlockId]);
 
   const toggleExpand = (id: string) => {
     setCollapsedBlockIds((prev) => ({
@@ -193,6 +196,13 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
         return 'border-[#34D399]/60 bg-[#34D399]/15 text-[#34D399] shadow-[0_0_10px_rgba(52,211,153,0.2)]';
     }
   };
+
+  const clearViewBlock = activeBlocks.find((block) => block.id === clearViewBlockId);
+  if (isOpen && clearViewBlock) {
+    return <BlockClearView block={clearViewBlock} stations={stations} corridors={corridors}
+      onBack={() => setClearViewBlockId(null)}
+      onClose={() => { setClearViewBlockId(null); onClose(); }} />;
+  }
 
   return (
     <AnimatePresence>
@@ -361,7 +371,12 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button type="button" onClick={() => setClearViewBlockId(block.id)}
+                            className="flex items-center gap-1.5 rounded-lg border border-emerald-300/50 bg-emerald-300/10 px-3 py-1.5 text-[11px] font-mono text-emerald-200 hover:bg-emerald-300/20">
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span>CLEAR BLOCK VIEW</span>
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleLocate(block)}

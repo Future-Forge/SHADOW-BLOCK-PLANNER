@@ -42,6 +42,10 @@ def build_gq_data_bundle(data_dir: str | Path) -> GQDataBundle:
 
     timetable = TimetableEngine()
     timetable.load_trains(trains)
+    timetable.corridor_km_maps = {
+        leg: {s.code: s.cumulative_km for s in corridor.stations}
+        for leg, corridor in network.corridors.items()
+    }
 
     leg_of_station = {
         code: network.leg_for_station(code)

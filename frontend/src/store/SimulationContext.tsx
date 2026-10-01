@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { format } from "date-fns";
 import type { ActiveBlock, BlockDecision, BlockRequest, Corridor, StationItem, CorridorLeg } from "../api/types";
 import { api } from "../api/api";
+import { planningFetch } from "../api/planning";
+import type { Operation } from "../api/planning";
 import type { ColorBlindnessMode } from "../lib/accessibility";
 
 type SpeedMultiplier = 1 | 2 | 5 | 10;
@@ -27,7 +29,8 @@ interface SimulationContextType {
   setSpeedMultiplier: (speed: SpeedMultiplier) => void;
   scrubToTime: (time: string) => void;
   activeBlocks: ActiveBlock[];
-  commitActiveBlock: (request: BlockRequest, decision: BlockDecision) => void;
+  commitActiveBlock: (request: BlockRequest, decision: BlockDecision, id?: string) => void;
+  refreshOperations: () => Promise<void>;
   clearActiveBlock: (id: string) => void;
   prefillStation: string | null;
   setPrefillStation: (code: string | null) => void;
@@ -292,11 +295,22 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setCurrentTime(timeStr);
   };
 
-  const commitActiveBlock = (request: BlockRequest, decision: BlockDecision) => {
+  const refreshOperations = useCallback(async () => {
+    const records = await planningFetch<Operation[]>('/operations');
+    setActiveBlocks(records.filter(op => op.status === 'ACTIVE' && op.snapshot).map(op => ({
+      id: op.block_id, request: op.snapshot!.request, decision: op.snapshot!.decision, committedAt: op.created_at,
+    })));
+  }, []);
+
+  useEffect(() => {
+    refreshOperations().catch(error => console.warn('Persistent block history unavailable:', error));
+  }, [refreshOperations]);
+
+  const commitActiveBlock = (request: BlockRequest, decision: BlockDecision, id?: string) => {
     setActiveBlocks((blocks) => [
       ...blocks,
       {
-        id: `${request.from_station}-${request.to_station}-${Date.now()}`,
+        id: id || decision.block_id || `${request.from_station}-${request.to_station}-${Date.now()}`,
         request,
         decision,
         committedAt: new Date().toISOString(),
@@ -304,7 +318,11 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     ]);
   };
 
-  const clearActiveBlock = (id: string) => {
+  const clearActiveBlock = async (id: string) => {
+    if (id.startsWith('BLK-')) {
+      try { await planningFetch(`/operations/${encodeURIComponent(id)}/close`, {}); }
+      catch (error) { window.alert(`Block was not closed: ${error instanceof Error ? error.message : error}`); return; }
+    }
     setActiveBlocks((blocks) => blocks.filter((block) => block.id !== id));
   };
 
@@ -367,6 +385,7 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         scrubToTime,
         activeBlocks,
         commitActiveBlock,
+        refreshOperations,
         clearActiveBlock,
         prefillStation,
         setPrefillStation,

@@ -11,10 +11,12 @@ analyzed block -- full WebSocket broadcast wiring lives in main.py's
 /ws/live-feed handler; this endpoint just records the commit decision.
 """
 from __future__ import annotations
+from datetime import time
 
 from fastapi import APIRouter, Request, HTTPException
 
 from app.core.gap_finder import GapFinder
+from app.core.planning_service import analyze as analyze_plan, canonical
 from app.core.gq_optimizer import solve_major_block_regulation, TrainConflict, CATEGORY_WEIGHTS
 from app.core.emergency_dispatcher import dispatch_emergency_block
 from app.core.timetable_engine import time_to_minutes, minutes_to_time, SectorConflict
@@ -88,7 +90,12 @@ def preview_traffic(
     if not t_str:
         t_str = "12:00:00"
 
-    parsed_time = t_str if hasattr(t_str, "hour") else minutes_to_time(time_to_minutes(t_str) if isinstance(t_str, str) else 720)
+    try:
+        parsed_time = t_str if isinstance(t_str, time) else time.fromisoformat(t_str)
+    except ValueError:
+        raise HTTPException(422, 'requested_time must be HH:MM or HH:MM:SS.')
+    if dur <= 0 or dur > 480:
+        raise HTTPException(422, 'duration_minutes must be from 1 to 480.')
 
     bundle = request.app.state.gq_bundle
     network, timetable = bundle.network, bundle.timetable
@@ -108,6 +115,7 @@ def preview_traffic(
         window_start_min=start_min,
         window_end_min=end_min,
         corridor_km_map=km_map,
+        operation_date=body.operation_date if body else None,
     )
 
     items: list[TrafficPreviewItem] = []
@@ -141,243 +149,50 @@ def preview_traffic(
 
 @router.post("/analyze-block", response_model=BlockDecision)
 def analyze_block(req: BlockRequest, request: Request) -> BlockDecision:
-    bundle = request.app.state.gq_bundle
-    network, timetable = bundle.network, bundle.timetable
-
-    leg_id, line = _resolve_leg_and_line(request, req.from_station, req.to_station, req.track_line)
-    requested_min = time_to_minutes(req.requested_time)
-    track_geometry = network.get_track_segment(req.from_station, req.to_station)
-
-    if req.criticality == Criticality.NORMAL:
-        decision = _handle_normal(network, timetable, leg_id, line, req, requested_min)
-    elif req.criticality == Criticality.MAJOR:
-        decision = _handle_major(network, timetable, leg_id, line, req, requested_min)
-    elif req.criticality == Criticality.EMERGENCY:
-        decision = _handle_emergency(network, timetable, leg_id, line, req, requested_min)
-    else:
-        raise HTTPException(status_code=400, detail=f"Unknown criticality: {req.criticality}")
-
-    decision.block_geometry = track_geometry
-    return decision
+    return analyze_plan(req, request.app.state.gq_bundle, request.app.state.operation_store)
 
 
-def _handle_normal(network, timetable, leg_id: str, line: TrackLine, req: BlockRequest, requested_min: int) -> BlockDecision:
-    corridor = network.corridors[leg_id]
-    km_map = {s.code: s.cumulative_km for s in corridor.stations}
-    block_start = requested_min
-    block_end = requested_min + req.duration_minutes
-
-    sector_conflicts = timetable.find_sector_trains_in_window(
-        leg_id=leg_id,
-        track_line=line,
-        from_code=STATION_ALIASES.get(req.from_station.upper(), req.from_station.upper()),
-        to_code=STATION_ALIASES.get(req.to_station.upper(), req.to_station.upper()),
-        window_start_min=block_start,
-        window_end_min=block_end,
-        corridor_km_map=km_map,
-    )
-
-    if not sector_conflicts:
-        return BlockDecision(
-            status=BlockDecisionStatus.APPROVED,
-            block_window={
-                "start": req.requested_time,
-                "end": minutes_to_time(block_end % 1440),
-            },
-            affected_trains=[],
-            asset_availability_index=100.0,
-            total_weighted_delay_cost=0.0,
-            notes="Zero conflicting trains on this micro-section during requested window -- approved with zero delay.",
-        )
-
-    # If conflicts exist, check if a qualifying zero-delay slot exists nearby
-    gf = GapFinder(timetable)
-    best = gf.best_gap_near(leg_id, line, req.from_station, req.to_station, requested_min, req.duration_minutes)
-
-    if best:
-        return BlockDecision(
-            status=BlockDecisionStatus.APPROVED,
-            block_window={
-                "start": minutes_to_time(best.start_min % 1440),
-                "end": minutes_to_time((best.start_min + req.duration_minutes) % 1440),
-            },
-            affected_trains=[],
-            asset_availability_index=100.0,
-            total_weighted_delay_cost=0.0,
-            notes=f"Requested window had {len(sector_conflicts)} conflicting train(s); shifted to nearest zero-delay slot ({minutes_to_time(best.start_min)}).",
-        )
-
-    return BlockDecision(
-        status=BlockDecisionStatus.REJECTED,
-        block_window={"start": req.requested_time, "end": req.requested_time},
-        affected_trains=[
-            AffectedTrain(
-                train_number=c.train_number,
-                train_name=c.train_name,
-                category=c.category,
-                action=RegulationAction.NONE,
-                scheduled_pass_time=c.scheduled_pass_time,
-                delay_minutes=0.0,
-            )
-            for c in sector_conflicts
-        ],
-        asset_availability_index=0.0,
-        notes=f"No zero-delay gap found on this micro-section -- {len(sector_conflicts)} conflicting trains during requested slot.",
-    )
-
-
-def _handle_major(network, timetable, leg_id: str, line: TrackLine, req: BlockRequest, requested_min: int) -> BlockDecision:
-    corridor = network.corridors[leg_id]
-    km_map = {s.code: s.cumulative_km for s in corridor.stations}
-    block_start = requested_min
-    block_end = requested_min + req.duration_minutes
-
-    sector_conflicts = timetable.find_sector_trains_in_window(
-        leg_id=leg_id,
-        track_line=line,
-        from_code=STATION_ALIASES.get(req.from_station.upper(), req.from_station.upper()),
-        to_code=STATION_ALIASES.get(req.to_station.upper(), req.to_station.upper()),
-        window_start_min=block_start,
-        window_end_min=block_end,
-        corridor_km_map=km_map,
-    )
-
-    if not sector_conflicts:
-        return BlockDecision(
-            status=BlockDecisionStatus.APPROVED,
-            block_window={
-                "start": minutes_to_time(block_start % 1440),
-                "end": minutes_to_time(block_end % 1440),
-            },
-            affected_trains=[],
-            asset_availability_index=100.0,
-            total_weighted_delay_cost=0.0,
-            notes="No trains conflict with the requested window -- approved with no regulation needed.",
-        )
-
-    conflicts = [
-        TrainConflict(c.train_number, c.category, c.pass_entry_min)
-        for c in sector_conflicts
-    ]
-
-    try:
-        outcome = solve_major_block_regulation(conflicts, block_start, block_end)
-    except Exception:
-        # Fallback heuristic: delay by order of entry
-        outcome = None
-
-    affected: list[AffectedTrain] = []
-    conflict_map = {c.train_number: c for c in sector_conflicts}
-
-    if outcome:
-        for r in outcome.results:
-            c = conflict_map.get(r.train_number)
-            if not c:
-                continue
-            affected.append(
-                AffectedTrain(
-                    train_number=r.train_number,
-                    train_name=c.train_name,
-                    category=c.category,
-                    action=RegulationAction.HOLD if r.delay_minutes > 0 else RegulationAction.NONE,
-                    hold_station=req.from_station if r.delay_minutes > 0 else None,
-                    delay_minutes=r.delay_minutes,
-                    scheduled_pass_time=c.scheduled_pass_time,
-                )
-            )
-        total_delay = outcome.total_weighted_cost
-    else:
-        for idx, c in enumerate(sector_conflicts):
-            del_m = (idx + 1) * 12.0
-            affected.append(
-                AffectedTrain(
-                    train_number=c.train_number,
-                    train_name=c.train_name,
-                    category=c.category,
-                    action=RegulationAction.HOLD,
-                    hold_station=req.from_station,
-                    delay_minutes=del_m,
-                    scheduled_pass_time=c.scheduled_pass_time,
-                )
-            )
-        total_delay = sum(a.delay_minutes for a in affected)
-
-    worst_premium_delay = max(
-        (a.delay_minutes for a in affected if a.category == TrainCategory.PREMIUM), default=0.0
-    )
-    availability_index = max(0.0, 100.0 - min(worst_premium_delay, 100.0))
-
-    return BlockDecision(
-        status=BlockDecisionStatus.APPROVED_WITH_REGULATION,
-        block_window={
-            "start": minutes_to_time(block_start % 1440),
-            "end": minutes_to_time(block_end % 1440),
-        },
-        affected_trains=affected,
-        asset_availability_index=round(availability_index, 1),
-        total_weighted_delay_cost=round(total_delay, 1),
-        notes=f"{len(affected)} train(s) regulated via weighted-delay MILP on micro-section {req.from_station}➔{req.to_station}.",
-    )
-
-
-def _handle_emergency(network, timetable, leg_id: str, line: TrackLine, req: BlockRequest, requested_min: int) -> BlockDecision:
-    corridor = network.corridors[leg_id]
-    km_map = {s.code: s.cumulative_km for s in corridor.stations}
-    block_start = requested_min
-    block_end = requested_min + req.duration_minutes
-
-    sector_conflicts = timetable.find_sector_trains_in_window(
-        leg_id=leg_id,
-        track_line=line,
-        from_code=STATION_ALIASES.get(req.from_station.upper(), req.from_station.upper()),
-        to_code=STATION_ALIASES.get(req.to_station.upper(), req.to_station.upper()),
-        window_start_min=block_start,
-        window_end_min=block_end,
-        corridor_km_map=km_map,
-    )
-
-    affected: list[AffectedTrain] = []
-    for idx, c in enumerate(sector_conflicts):
-        action = RegulationAction.HOLD if idx == 0 else RegulationAction.CAUTION
-        delay = 24.0 if action == RegulationAction.HOLD else 15.0
-        affected.append(
-            AffectedTrain(
-                train_number=c.train_number,
-                train_name=c.train_name,
-                category=c.category,
-                action=action,
-                hold_station=req.from_station if action == RegulationAction.HOLD else None,
-                delay_minutes=delay,
-                scheduled_pass_time=c.scheduled_pass_time,
-            )
-        )
-
-    availability_index = max(0.0, 100.0 - min(len(affected) * 12.0, 100.0))
-
-    return BlockDecision(
-        status=BlockDecisionStatus.APPROVED_WITH_REGULATION,
-        block_window={
-            "start": req.requested_time,
-            "end": minutes_to_time(block_end % 1440),
-        },
-        affected_trains=affected,
-        asset_availability_index=round(availability_index, 1),
-        total_weighted_delay_cost=sum(a.delay_minutes for a in affected),
-        notes=f"EMERGENCY block enforced immediately on micro-section {req.from_station}➔{req.to_station} -- {len(affected)} train(s) regulated.",
-    )
 
 
 @router.post("/commit-block")
 def commit_block(req: BlockRequest, request: Request) -> dict:
-    decision = analyze_block(req, request)
-    leg_id, _ = _resolve_leg_and_line(request, req.from_station, req.to_station, req.track_line)
-    operation = request.app.state.operation_store.record(
-        department=req.department.value,
-        corridor=leg_id,
-        from_station=req.from_station.upper(),
-        to_station=req.to_station.upper(),
-        start_time=decision.block_window["start"].strftime("%H:%M:%S"),
-        duration_minutes=req.duration_minutes,
-        impacted_trains=(train.train_number for train in decision.affected_trains),
-    )
+    store = request.app.state.operation_store
+    with store.transaction():
+        decision = analyze_block(req, request)
+        if decision.status not in (BlockDecisionStatus.APPROVED, BlockDecisionStatus.APPROVED_WITH_REGULATION):
+            raise HTTPException(409, decision.notes)
+        operation = store.record(
+            department='+'.join(t['department'] for t in decision.planning['tasks']),
+            corridor=decision.planning['corridor'], from_station=canonical(req.from_station), to_station=canonical(req.to_station),
+            start_time=decision.block_window['start'].strftime('%H:%M:%S'),
+            duration_minutes=decision.planning['effective_duration_minutes'], operation_date=req.operation_date,
+            impacted_trains=(train.train_number for train in decision.affected_trains),
+            snapshot={'request': req.model_dump(mode='json'), 'decision': decision.model_dump(mode='json')})
     return {"committed": True, "block_id": operation.block_id, "decision": decision}
+
+
+@router.get('/operations')
+def operation_history(request: Request):
+    return request.app.state.operation_store.list()
+
+
+@router.post('/operations/{block_id}/close')
+def close_operation(block_id: str, request: Request):
+    if not request.app.state.operation_store.close_operation(block_id):
+        raise HTTPException(404, 'Operation not found.')
+    return {'closed': True}
+
+
+@router.post('/operations/{block_id}/evaluate')
+def evaluate_operation(block_id: str, request: Request):
+    store = request.app.state.operation_store
+    operation = next((op for op in store.list() if op['block_id'] == block_id), None)
+    if not operation:
+        raise HTTPException(404, 'Operation not found.')
+    if not (operation.get('snapshot') or {}).get('request'):
+        raise HTTPException(422, 'Legacy operation has no replayable request snapshot.')
+    req = BlockRequest.model_validate(operation['snapshot']['request'])
+    decision = analyze_plan(req, request.app.state.gq_bundle, store, ignore_id=block_id)
+    return {'block_id': block_id, 'original': operation['snapshot']['decision'].get('planning', {}).get('evaluation'),
+            'replay': decision.planning['evaluation'], 'explanations': decision.planning['explanations'],
+            'limitations': decision.planning['limitations']}

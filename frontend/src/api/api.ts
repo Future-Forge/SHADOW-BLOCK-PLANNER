@@ -12,6 +12,7 @@ import type {
   TrafficPreviewRequest,
   TrafficPreviewResponse,
   BlockResourceData,
+  CorridorTelemetry,
 } from "./types";
 
 function getInitialBaseUrl(): string {
@@ -230,6 +231,17 @@ function simulateLiveTrains(simTimeStr: string): LiveTrainState[] {
     const lon = s1.lon + (s2.lon - s1.lon) * segmentProgress;
     const lat = s1.lat + (s2.lat - s1.lat) * segmentProgress;
 
+    // Tactical forward azimuth calculation
+    const dLon = (s2.lon - s1.lon) * (Math.PI / 180);
+    const y = Math.sin(dLon) * Math.cos(s2.lat * (Math.PI / 180));
+    const x =
+      Math.cos(s1.lat * (Math.PI / 180)) * Math.sin(s2.lat * (Math.PI / 180)) -
+      Math.sin(s1.lat * (Math.PI / 180)) * Math.cos(s2.lat * (Math.PI / 180)) * Math.cos(dLon);
+    let bearing = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+    if (idx % 2 !== 0) {
+      bearing = (bearing + 180) % 360;
+    }
+
     return {
       train_number: t.num,
       train_name: t.name,
@@ -242,110 +254,12 @@ function simulateLiveTrains(simTimeStr: string): LiveTrainState[] {
       status: "RUNNING" as const,
       corridor_leg: t.leg,
       delay_minutes: 0,
+      heading: Math.round(bearing * 10) / 10,
+      bearing: Math.round(bearing * 10) / 10,
     };
   });
 }
 
-function simulateBlockDecision(request: BlockRequest): BlockDecision {
-  const parseMin = (timeStr: string) => {
-    const [h, m] = timeStr.split(":").map(Number);
-    return (h || 12) * 60 + (m || 0);
-  };
-
-  const fmtMin = (min: number) => {
-    const norm = (min % 1440 + 1440) % 1440;
-    const h = Math.floor(norm / 60).toString().padStart(2, "0");
-    const m = Math.floor(norm % 60).toString().padStart(2, "0");
-    return `${h}:${m}:00`;
-  };
-
-  const startMin = parseMin(request.requested_time);
-  const endMin = startMin + request.duration_minutes;
-
-  if (request.criticality === "NORMAL") {
-    return {
-      status: "APPROVED",
-      block_window: {
-        start: fmtMin(startMin),
-        end: fmtMin(endMin),
-      },
-      affected_trains: [],
-      max_available_gap_nearby: {
-        start: fmtMin(startMin),
-        end: fmtMin(endMin + 20),
-        duration_minutes: request.duration_minutes + 20,
-      },
-      asset_availability_index: 100.0,
-      total_weighted_delay_cost: 0.0,
-      notes: "Optimal zero-delay slot confirmed within scheduled headway gap. Zero passenger disruption.",
-    };
-  } else if (request.criticality === "MAJOR") {
-    return {
-      status: "APPROVED_WITH_REGULATION",
-      block_window: {
-        start: fmtMin(startMin),
-        end: fmtMin(endMin),
-      },
-      affected_trains: [
-        {
-          train_number: "84920",
-          train_name: "BOXN Coal Freight Rake",
-          category: "FREIGHT",
-          action: "HOLD",
-          hold_station: request.from_station,
-          delay_minutes: 18.0,
-        },
-        {
-          train_number: "12953",
-          train_name: "August Kranti Rajdhani",
-          category: "PREMIUM",
-          action: "CAUTION",
-          hold_station: null,
-          delay_minutes: 4.0,
-        },
-      ],
-      max_available_gap_nearby: {
-        start: fmtMin(startMin + 45),
-        end: fmtMin(endMin + 45),
-        duration_minutes: request.duration_minutes,
-      },
-      asset_availability_index: 94.2,
-      total_weighted_delay_cost: 16.5,
-      notes: "MILP optimization converged in 48 iterations. Freight held on loop line; premium traffic regulated at caution speed.",
-    };
-  } else {
-    // EMERGENCY
-    return {
-      status: "APPROVED",
-      block_window: {
-        start: fmtMin(startMin),
-        end: fmtMin(endMin),
-      },
-      affected_trains: [
-        {
-          train_number: "12951",
-          train_name: "Mumbai Rajdhani Express",
-          category: "PREMIUM",
-          action: "HOLD",
-          hold_station: request.from_station,
-          delay_minutes: 24.0,
-        },
-        {
-          train_number: "59045",
-          train_name: "Surat Passenger",
-          category: "PASSENGER",
-          action: "DIVERT",
-          hold_station: request.from_station,
-          delay_minutes: 32.0,
-        },
-      ],
-      max_available_gap_nearby: null,
-      asset_availability_index: 78.0,
-      total_weighted_delay_cost: 58.0,
-      notes: "EMERGENCY BLOCK ENFORCED. Immediate halt orders issued to approaching block sections.",
-    };
-  }
-}
 
 function simulateDispatcherResponse(req: DispatcherChatRequest): DispatcherChatResponse {
   const msg = req.message.toLowerCase();
@@ -506,6 +420,21 @@ export const api = {
     }
   },
 
+  // Corridor Telemetry with TripsLayer timestamps and congestion metrics: GET /api/v1/network/corridor-telemetry
+  getCorridorTelemetry: async (): Promise<CorridorTelemetry[]> => {
+    try {
+      return await fetchWithFallback<CorridorTelemetry[]>("/api/v1/network/corridor-telemetry");
+    } catch {
+      return GQ_CORRIDORS.map((c) => ({
+        corridor_id: c.corridor_id || `GQ_${c.leg_id}`,
+        path: c.path || c.stations.map((s) => [s.lon, s.lat] as [number, number]),
+        timestamps: c.timestamps || [0, 250, 500, 750, 1000],
+        congestion_score: c.congestion_score || 7.0,
+        status: (c.status as any) || "NORMAL",
+      }));
+    }
+  },
+
   // Granular Station List: GET /api/v1/network/stations
   getStations: async (legId?: string): Promise<StationItem[]> => {
     try {
@@ -618,27 +547,18 @@ export const api = {
 
   // 2. POST /api/v1/planner/analyze-block
   analyzeBlock: async (request: BlockRequest): Promise<BlockDecision> => {
-    try {
       return await fetchWithFallback<BlockDecision>("/api/v1/planner/analyze-block", {
         method: "POST",
         body: JSON.stringify(request),
       });
-    } catch {
-      // Autonomous simulation fallback ensures the system works 100% even without backend running
-      return simulateBlockDecision(request);
-    }
   },
 
   // Commit block
-  commitBlock: async (request: BlockRequest): Promise<{ committed: boolean; decision: BlockDecision }> => {
-    try {
-      return await fetchWithFallback<{ committed: boolean; decision: BlockDecision }>("/api/v1/planner/commit-block", {
+  commitBlock: async (request: BlockRequest): Promise<{ committed: boolean; block_id: string; decision: BlockDecision }> => {
+      return await fetchWithFallback<{ committed: boolean; block_id: string; decision: BlockDecision }>("/api/v1/planner/commit-block", {
         method: "POST",
         body: JSON.stringify(request),
       });
-    } catch {
-      return { committed: true, decision: simulateBlockDecision(request) };
-    }
   },
 
   getBlockResources: async (params: {

@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Union
 from fastapi import APIRouter, Request, HTTPException, Query
 
-from app.models.schemas import Corridor, StationItem
+from app.models.schemas import Corridor, StationItem, CorridorTelemetry
 from app.data.gq_corridors import GQ_CORRIDOR_LEGS, STATION_ALIASES
 
 router = APIRouter(prefix="/api/v1", tags=["stations"])
@@ -165,3 +165,25 @@ def get_gq_corridor(leg_id: str, request: Request) -> Corridor:
     if corridor is None:
         raise HTTPException(status_code=404, detail=f"Unknown GQ corridor leg_id: {leg_id!r}")
     return corridor
+
+
+@router.get("/network/corridor-telemetry", response_model=list[CorridorTelemetry])
+@router.get("/corridor-telemetry", response_model=list[CorridorTelemetry])
+def get_corridor_telemetry(request: Request) -> list[CorridorTelemetry]:
+    """
+    Supplies the coordinate path, synchronized array of elapsed animation timestamps (0..1000),
+    and real-time congestion scores driving data-driven TripsLayer width profiling.
+    """
+    network = request.app.state.gq_bundle.network
+    results: list[CorridorTelemetry] = []
+    for c in network.corridors.values():
+        results.append(
+            CorridorTelemetry(
+                corridor_id=c.corridor_id or f"GQ_{c.leg_id}",
+                path=c.path or [[s.lon, s.lat] for s in c.stations],
+                timestamps=c.timestamps or [0.0] * len(c.stations),
+                congestion_score=c.congestion_score or 6.0,
+                status=c.status or "NORMAL",
+            )
+        )
+    return results

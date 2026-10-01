@@ -8,3 +8,6 @@ venv/
 # Node
 node_modules/
 dist/
+backend/var/
+.pytest_cache/
+.DS_Store

@@ -56,6 +56,17 @@ def _interpolate_along_polyline(coords: list[list[float]], fraction: float) -> t
     return coords[-1][0], coords[-1][1]
 
 
+def calculate_bearing(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calculates forward azimuth / bearing in degrees (0..360) from point 1 to point 2."""
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_lambda = math.radians(lon2 - lon1)
+    y = math.sin(delta_lambda) * math.cos(phi2)
+    x = math.cos(phi1) * math.sin(phi2) - math.sin(phi1) * math.cos(phi2) * math.cos(delta_lambda)
+    theta = math.atan2(y, x)
+    return round((math.degrees(theta) + 360) % 360, 1)
+
+
 def compute_live_trains(
     network: GQNetworkGraph,
     timetable: TimetableEngine,
@@ -126,6 +137,7 @@ def compute_live_trains(
             hop_distance_km = max(pos.next_stop.distance_km - pos.prev_stop.distance_km, 0.0)
         hop_span_min = max(pos.arr_min - pos.dep_min, 1)
         speed_kmph = (hop_distance_km / hop_span_min) * 60 if hop_distance_km > 0 else 0.0
+        train_bearing = calculate_bearing(station_a.lat, station_a.lon, station_b.lat, station_b.lon)
 
         results.append(
             LiveTrainState(
@@ -140,6 +152,8 @@ def compute_live_trains(
                 status=TrainStatus.RUNNING,
                 corridor_leg=leg_id,
                 delay_minutes=0.0,
+                heading=train_bearing,
+                bearing=train_bearing,
             )
         )
 

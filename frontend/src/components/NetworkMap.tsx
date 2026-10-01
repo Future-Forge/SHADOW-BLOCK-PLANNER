@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import Map from 'react-map-gl/maplibre';
 import { DeckGL } from '@deck.gl/react';
-import { PathLayer, ScatterplotLayer, LineLayer, ColumnLayer } from '@deck.gl/layers';
+import { PathLayer, ScatterplotLayer, LineLayer, ColumnLayer, IconLayer, TextLayer } from '@deck.gl/layers';
 import { FlyToInterpolator, WebMercatorViewport } from '@deck.gl/core';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { ActiveBlock, Corridor, LiveTrainState } from '../api/types';
@@ -9,22 +9,15 @@ import { useSimulation } from '../store/SimulationContext';
 import { getMapColor, type ColorBlindnessMode } from '../lib/accessibility';
 import { Navigation } from 'lucide-react';
 
-// Tactical Rail Engine Palette (Military-grade infrastructure tokens)
-const CORRIDOR_COLORS = {
-  WEST: [52, 211, 153],       // status-nominal (#34D399)
-  SOUTH_WEST: [56, 189, 248], // train-modern (#38BDF8)
-  EAST_COAST: [167, 243, 208],// accent-maintenance (#A7F3D0)
-  NORTH_EAST: [252, 211, 77], // train-premium (#FCD34D)
-} as const;
-
-const TRAIN_COLORS = {
-  PREMIUM: [252, 211, 77],    // train-premium (#FCD34D) - Rajdhani / Shatabdi
-  SUPERFAST: [56, 189, 248],  // train-modern (#38BDF8) - Modern / Vande Bharat
-  DELAYED: [249, 115, 22],    // train-delayed (#F97316) - Delayed / Held
-  EXPRESS: [52, 211, 153],    // status-nominal (#34D399) - On-time mainlines
-  PASSENGER: [226, 234, 244], // text-tactical-steel (#E2EAF4)
-  FREIGHT: [148, 163, 184],   // Desaturated tactical steel
-} as const;
+// WebGL blend equation additive (GL.FUNC_ADD = 0x8006 / 32774)
+const GL = {
+  FUNC_ADD: 32774,
+};
+import {
+  TACTICAL_CHEVRON_SVG,
+  TACTICAL_ICON_MAPPING,
+  getTacticalTrainColor,
+} from '../lib/tacticalSymbology';
 
 export interface MapViewState {
   longitude: number;
@@ -62,10 +55,6 @@ function getAction(train: LiveTrainState, blocks: ActiveBlock[]) {
     if (affected) return affected.action;
   }
   return 'NONE' as const;
-}
-
-function getTrackPath(corridor: Corridor) {
-  return corridor.stations.map((station) => [station.lon, station.lat] as [number, number]);
 }
 
 function buildTrail(train: LiveTrainState) {
@@ -279,18 +268,41 @@ export const NetworkMap = ({
     }));
   }, [cameraTarget]);
 
-  const corridorLayers = useMemo(
-    () =>
-      corridors.map((corridor) => ({
-        path: getTrackPath(corridor),
-        color:
-          corridor.leg_id === 'WEST'
-            ? getMapColor('nominal', colorMode)
-            : CORRIDOR_COLORS[corridor.leg_id] || [52, 211, 153],
-        name: corridor.display_name,
-      })),
-    [corridors, colorMode],
-  );
+  // Corridor Telemetry dataset for Base Track (PathLayer) & Animated Telemetry Flow (TripsLayer)
+  const corridorData = useMemo(() => {
+    return corridors.map((corridor) => {
+      const path: [number, number][] =
+        corridor.path && corridor.path.length >= 2
+          ? (corridor.path as [number, number][])
+          : corridor.stations.map((s) => [s.lon, s.lat] as [number, number]);
+
+      let timestamps: number[] = corridor.timestamps || [];
+      if (!timestamps || timestamps.length !== path.length) {
+        const total = corridor.total_km || 1000;
+        timestamps = corridor.stations.map((s, idx) =>
+          idx === 0
+            ? 0
+            : idx === corridor.stations.length - 1
+            ? 1000
+            : Math.round((s.cumulative_km / total) * 1000)
+        );
+      }
+
+      return {
+        corridor_id: corridor.corridor_id || `GQ_${corridor.leg_id}`,
+        leg_id: corridor.leg_id,
+        path,
+        timestamps,
+        congestion_score:
+          corridor.congestion_score ??
+          (corridor.leg_id === 'WEST' || corridor.leg_id === 'NORTH_EAST' ? 8.5 : 5.5),
+        status:
+          corridor.status ||
+          (corridor.leg_id === 'WEST' || corridor.leg_id === 'NORTH_EAST' ? 'CRITICAL' : 'NORMAL'),
+        display_name: corridor.display_name,
+      };
+    });
+  }, [corridors]);
 
   const stationData = useMemo(() => {
     const seen = new Set<string>();
@@ -313,45 +325,32 @@ export const NetworkMap = ({
         .sort((a, b) => a.train_number.localeCompare(b.train_number))
         .map((train) => {
           const action = getAction(train, activeBlocks);
-          let color: [number, number, number];
 
-          // Semantic Colors from Tactical Palette
+          // Semantic Colors from Tactical ATC Palette
           const isDelayedOrHeld =
             action === 'HOLD' ||
             train.status === 'HELD' ||
             action === 'DIVERT' ||
             action === 'LOOP' ||
             train.status === 'LOOPED' ||
-            (train.delay_minutes && train.delay_minutes > 0);
+            Boolean(train.delay_minutes && train.delay_minutes > 0);
 
-          if (isDelayedOrHeld) {
-            color = [...TRAIN_COLORS.DELAYED]; // Delayed/Held: Orange (#F97316)
-          } else if (train.category === 'PREMIUM') {
-            color = [...TRAIN_COLORS.PREMIUM]; // Premium/Rajdhani: Gold (#FCD34D)
-          } else if (train.category === 'SUPERFAST') {
-            color = [...TRAIN_COLORS.SUPERFAST]; // Modern/Vande Bharat: Cyan (#38BDF8)
-          } else if (train.category === 'EXPRESS') {
-            color = [...TRAIN_COLORS.EXPRESS]; // Express: Emerald (#34D399)
-          } else if (train.category === 'FREIGHT') {
-            color = [...TRAIN_COLORS.FREIGHT]; // Freight: Tactical steel
-          } else {
-            color = [...TRAIN_COLORS.PASSENGER]; // Passenger/Default: Slate steel
-          }
+          const color = getTacticalTrainColor(train, action, isDelayedOrHeld, colorMode);
 
-          // If accessibility color mode is active, allow high-contrast override
-          if (colorMode !== 'standard') {
-            if (isDelayedOrHeld) {
-              color = getMapColor('critical', colorMode);
-            } else if (train.category === 'EXPRESS') {
-              color = getMapColor('nominal', colorMode);
-            }
-          }
+          // Azimuth / Bearing for directional tactical rotation
+          const bearing =
+            train.bearing ??
+            train.heading ??
+            (train.track_line === 'UP' ? 45 : 225);
 
           return {
             id: train.train_number,
+            train_number: train.train_number,
             name: train.train_name,
             position: [train.lon, train.lat] as [number, number],
             color,
+            bearing,
+            heading: bearing,
             radius: isDelayedOrHeld ? 10 : action !== 'NONE' ? 10 : 7,
             speed: Math.round(train.speed_kmph),
             status: train.status,
@@ -404,17 +403,57 @@ export const NetworkMap = ({
   );
 
   const layers = [
-    // 1. Golden Quadrilateral Trunk Rail Lines (Razor-crisp tactical network)
+    // 1. TACTICAL BACKBONE - PASS 1: The Ambient Glow (Thick & Translucent neon emission)
     new PathLayer({
-      id: 'gq-tracks',
-      data: corridorLayers,
+      id: 'gq-ambient-glow',
+      data: corridorData,
       getPath: (d: any) => d.path,
-      getColor: (d: any) => [...d.color, 90],
-      widthMinPixels: 2.2,
-      widthUnits: 'pixels',
-      jointRounded: true,
+      getColor: [167, 243, 208, 40], // Tactical Mint (#A7F3D0) at ~15% opacity
+      getWidth: 8000, // Scale appropriately so it looks like a 10px-15px wide glow on the screen
+      widthMinPixels: 6,
+      widthMaxPixels: 20,
       capRounded: true,
+      jointRounded: true,
+      parameters: {
+        blendEquation: GL.FUNC_ADD, // Forces the neon additive blending
+      },
+    }),
+
+    // 2. TACTICAL BACKBONE - PASS 2: The Core Rail (Razor-sharp bright line through center of glow)
+    new PathLayer({
+      id: 'gq-core-rail',
+      data: corridorData,
+      getPath: (d: any) => d.path,
+      getColor: [167, 243, 208, 230], // High-visibility tactical mint core line
+      getWidth: 2,
+      widthUnits: 'pixels',
+      widthMinPixels: 1.5,
+      widthMaxPixels: 3,
+      capRounded: true,
+      jointRounded: true,
       opacity: 0.95,
+    }),
+
+    // 3. TACTICAL BACKBONE - PASS 3: The Junction Anchors (High-contrast nodes at major vertices)
+    new ScatterplotLayer({
+      id: 'gq-junction-anchors',
+      data: stationData,
+      getPosition: (d: any) => d.position,
+      getFillColor: [13, 19, 17, 255], // Deep obsidian core
+      getLineColor: [167, 243, 208, 240], // Tactical Mint neon halo ring
+      getRadius: 4.5,
+      radiusUnits: 'pixels',
+      radiusMinPixels: 3.5,
+      radiusMaxPixels: 8,
+      lineWidthMinPixels: 1.5,
+      stroked: true,
+      filled: true,
+      pickable: true,
+      onClick: (info: any) => {
+        if (info.object) {
+          setPrefillStation(info.object.code);
+        }
+      },
     }),
 
     // 2. Glowing Block Segment Highlight Lines (Tactical status indicators)
@@ -492,24 +531,24 @@ export const NetworkMap = ({
       jointRounded: true,
     }),
 
-    // 6. Live Train Markers (Tactical Command-Center Assets)
-    new ScatterplotLayer({
-      id: 'train-nodes',
+    // 6. Live Train Markers: Directional Tactical IconLayer (ATC Symbology)
+    new IconLayer({
+      id: 'train-icons',
       data: trainData,
+      iconAtlas: TACTICAL_CHEVRON_SVG,
+      iconMapping: TACTICAL_ICON_MAPPING,
+      getIcon: () => 'chevron',
       getPosition: (d: any) => d.position,
-      getFillColor: (d: any) => d.color,
-      getLineColor: [255, 255, 255, 200], // Subtle white halo
-      getRadius: (d: any) => d.radius,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 4,
-      radiusMaxPixels: 12,
-      lineWidthMinPixels: 2,
-      opacity: 1,
-      stroked: true,
-      filled: true,
+      getAngle: (d: any) => (d.bearing ?? d.heading ?? 0) * -1,
+      getColor: (d: any) => d.color,
+      getSize: 18,
+      sizeUnits: 'pixels',
+      sizeMinPixels: 12,
+      sizeMaxPixels: 24,
       pickable: true,
       transitions: {
         getPosition: 1000,
+        getAngle: 600,
       },
       onHover: (info: any) => {
         if (info.object) {
@@ -520,23 +559,23 @@ export const NetworkMap = ({
       },
     }),
 
-    // 7. Tactical Station Nodes
-    new ScatterplotLayer({
-      id: 'station-nodes',
-      data: stationData,
+    // 7. Tactical Train Identification TextLayer (Callsigns / Numbers)
+    new TextLayer({
+      id: 'train-labels',
+      data: trainData,
+      visible: viewState.zoom >= 6,
+      opacity: viewState.zoom < 6 ? 0 : 1,
       getPosition: (d: any) => d.position,
-      getFillColor: [26, 36, 33, 200], // bg-tactical-panel
-      getLineColor: [44, 58, 53, 255], // border-tactical-grid
-      getRadius: 4.5,
-      radiusUnits: 'pixels',
-      lineWidthMinPixels: 1.5,
-      stroked: true,
-      pickable: true,
-      onClick: (info: any) => {
-        if (info.object) {
-          setPrefillStation(info.object.code);
-        }
-      },
+      getText: (d: any) => d.train_number,
+      fontFamily: '"JetBrains Mono", monospace',
+      getSize: 10,
+      sizeUnits: 'pixels',
+      getColor: [226, 234, 244, 200],
+      getPixelOffset: [20, 0],
+      getTextAnchor: 'start',
+      getAlignmentBaseline: 'center',
+      characterSet: 'auto',
+      pickable: false,
     }),
   ];
 

@@ -17,6 +17,7 @@ import { NetworkMap } from './components/NetworkMap';
 import { TacticalSidebar } from './components/TacticalSidebar';
 import { ShadowBlockLoader } from './components/ShadowBlockLoader';
 import { ActiveBlocksModal } from './components/ActiveBlocksModal';
+import { PlanningLab } from './components/PlanningLab';
 import { TopLeftHUD } from './components/TopLeftHUD';
 import { api, getApiBaseUrl, setApiBaseUrl, isConnectedToBackend } from './api/api';
 import type {
@@ -56,6 +57,7 @@ function AppShell() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [isPlanningLabOpen, setIsPlanningLabOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Dynamic Traffic Pre-Fetch State
@@ -188,9 +190,9 @@ function AppShell() {
     const startTime = Date.now();
 
     try {
-      const { decision } = await api.commitBlock(request);
+      const decision = await api.analyzeBlock(request);
       setLastDecision(decision);
-      commitActiveBlock(request, decision);
+      setIsPlanningLabOpen(true);
 
       // Cinematic Camera FlyTo: Sweep to the midpoint of the block section
       // Zoom tightly (11) and pitch 60 degrees for 3D extrusion perspective
@@ -261,6 +263,8 @@ function AppShell() {
 
       {/* Full-viewport map surface; tactical panels float above it. */}
       <main className="relative h-full w-full">
+        <button onClick={() => { setLastDecision(null); setIsPlanningLabOpen(true); }} className="absolute right-6 top-[100px] z-40 rounded-xl border border-emerald-400/50 bg-[#13211d]/95 px-4 py-3 text-sm font-semibold text-emerald-300 shadow-xl">Planning Lab · Weather & history</button>
+        {isPlanningLabOpen && <PlanningLab initialRequest={request} initialDecision={lastDecision} onClose={() => setIsPlanningLabOpen(false)} />}
         {/* 3D WebGL / Deck.gl Map */}
         <NetworkMap trains={trains} onBlockClick={() => setIsBlockModalOpen(true)} />
 

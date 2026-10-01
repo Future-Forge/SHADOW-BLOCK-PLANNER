@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
         f"{len(app.state.gq_bundle.timetable._segment_index)} indexed block sections"
     )
     yield
-    # No teardown needed -- everything is in-memory and process-scoped.
+    app.state.operation_store.close()
 
 
 app = FastAPI(title=settings.APP_TITLE, version=settings.APP_VERSION, lifespan=lifespan)
@@ -67,7 +67,13 @@ app.include_router(chat.router)
 app.include_router(resources.router)
 
 
-@app.get("/api/v1/health")
+@app.api_route("/", methods=["GET", "HEAD"])
+def root() -> dict:
+    return {"status": "ok", "app": settings.APP_TITLE, "version": settings.APP_VERSION}
+
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+@app.api_route("/api/v1/health", methods=["GET", "HEAD"])
 def health(request: Request) -> dict:
     bundle = getattr(request.app.state, "gq_bundle", None)
     if bundle is None:
@@ -78,3 +84,13 @@ def health(request: Request) -> dict:
         "trains_loaded": len(bundle.timetable.trains),
         "indexed_block_sections": len(bundle.timetable._segment_index),
     }
+
+
+@app.get("/ingest/status")
+def ingest_status() -> dict:
+    return {"status": "complete", "message": "In-memory dataset loaded successfully"}
+
+
+@app.get("/api/forensic-metrics")
+def forensic_metrics() -> dict:
+    return {"status": "nominal", "active_blocks": 0, "system_load": "low"}

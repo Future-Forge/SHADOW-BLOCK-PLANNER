@@ -7,7 +7,8 @@ for the planner + chat API surface.
 """
 from __future__ import annotations
 
-from datetime import time
+from datetime import time, date
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel, Field, ConfigDict, field_validator
@@ -46,13 +47,26 @@ class CorridorStation(BaseModel):
     cumulative_km: float = Field(..., description="Chainage from the leg's origin station")
 
 
+class CorridorTelemetry(BaseModel):
+    corridor_id: str = Field(..., description="e.g. 'GQ_WEST', 'GQ_SOUTH_WEST'")
+    path: list[list[float]] = Field(..., description="Array of [lon, lat] coordinates")
+    timestamps: list[float] = Field(..., description="Normalized elapsed animation timestamps (0..1000)")
+    congestion_score: float = Field(..., description="Congestion/density analytical metric driving trail width")
+    status: str = Field("NORMAL", description="'CRITICAL' | 'NORMAL'")
+
+
 class Corridor(BaseModel):
+    corridor_id: Optional[str] = None
     leg_id: str = Field(..., description="e.g. 'WEST', 'SOUTH_WEST', 'EAST_COAST', 'NORTH_EAST'")
     display_name: str
     origin_code: str
     destination_code: str
     total_km: float
     stations: list[CorridorStation]
+    path: Optional[list[list[float]]] = None
+    timestamps: Optional[list[float]] = None
+    congestion_score: Optional[float] = 5.0
+    status: Optional[str] = "NORMAL"
 
 
 class TrainStop(BaseModel):
@@ -96,6 +110,8 @@ class LiveTrainState(BaseModel):
     status: TrainStatus
     corridor_leg: Optional[str] = None
     delay_minutes: float = 0.0
+    heading: Optional[float] = 0.0
+    bearing: Optional[float] = 0.0
 
 
 # --------------------------------------------------------------------------
@@ -118,6 +134,16 @@ class HeadwayGap(BaseModel):
 # Maintenance / block planning requests + responses
 # --------------------------------------------------------------------------
 
+class SharedTask(BaseModel):
+    department: Department
+    duration_minutes: int = Field(60, gt=0, le=480)
+
+
+class WeatherScenario(BaseModel):
+    mode: Literal['seasonal', 'clear', 'heavy_rain', 'high_wind', 'severe'] = 'seasonal'
+    exposed_work: bool = False
+
+
 class BlockRequest(BaseModel):
     from_station: str
     to_station: str
@@ -126,6 +152,20 @@ class BlockRequest(BaseModel):
     duration_minutes: int = Field(..., gt=0, le=480)
     department: Department
     criticality: Criticality
+    operation_date: date = Field(default_factory=date.today)
+    shared_tasks: list[SharedTask] = Field(default_factory=list, max_length=2)
+    parallel_work_confirmed: bool = False
+    weather: WeatherScenario = Field(default_factory=WeatherScenario)
+    resource_capacity: dict[str, int] = Field(default_factory=lambda: {
+        'TMS_crew': 2, 'SMMS_crew': 2, 'TDMS_crew': 2, 'equipment_sets': 3, 'vehicles': 2})
+
+    @field_validator('resource_capacity')
+    @classmethod
+    def valid_capacities(cls, capacities):
+        allowed = {'TMS_crew', 'SMMS_crew', 'TDMS_crew', 'equipment_sets', 'vehicles'}
+        if set(capacities) != allowed or any(v < 0 or v > 100 for v in capacities.values()):
+            raise ValueError('Supply all five resource capacities as integers from 0 to 100.')
+        return capacities
 
 
 class StationItem(BaseModel):
@@ -172,9 +212,11 @@ class BlockDecision(BaseModel):
         default_factory=list,
         description="Exact GIS LineString [[lon, lat], ...] sliced along the master corridor track"
     )
+    planning: dict = Field(default_factory=dict)
 
 
 class TrafficPreviewRequest(BaseModel):
+    operation_date: date = Field(default_factory=date.today)
     from_station: str
     to_station: str
     track_line: TrackLine = TrackLine.UP

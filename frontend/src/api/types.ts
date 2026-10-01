@@ -22,6 +22,14 @@ export interface StationItem {
 
 export type StationsByCorridorResponse = Record<CorridorLeg, StationItem[]>;
 
+export interface CorridorTelemetry {
+  corridor_id: string;
+  path: [number, number][];
+  timestamps: number[];
+  congestion_score: number;
+  status: "CRITICAL" | "NORMAL" | "CAUTION" | string;
+}
+
 export interface Corridor {
   id?: string;
   name?: string;
@@ -32,6 +40,11 @@ export interface Corridor {
   destination_code: string;
   total_km: number;
   stations: CorridorStation[];
+  corridor_id?: string;
+  path?: [number, number][];
+  timestamps?: number[];
+  congestion_score?: number;
+  status?: "CRITICAL" | "NORMAL" | "CAUTION" | string;
 }
 
 export interface LiveTrainState {
@@ -46,6 +59,8 @@ export interface LiveTrainState {
   status: "RUNNING" | "LOOPED" | "HELD" | "DIVERTED";
   corridor_leg: CorridorLeg | null;
   delay_minutes: number;
+  heading?: number;
+  bearing?: number;
 }
 
 
@@ -57,6 +72,11 @@ export interface BlockRequest {
   duration_minutes: number;
   department: "TMS" | "SMMS" | "TDMS";
   criticality: "NORMAL" | "MAJOR" | "EMERGENCY";
+  operation_date?: string;
+  shared_tasks?: { department: BlockRequest['department']; duration_minutes: number }[];
+  parallel_work_confirmed?: boolean;
+  weather?: { mode: 'seasonal' | 'clear' | 'heavy_rain' | 'high_wind' | 'severe'; exposed_work: boolean };
+  resource_capacity?: Record<string, number>;
 }
 
 export interface AffectedTrain {
@@ -113,6 +133,8 @@ export interface BlockDecision {
   total_weighted_delay_cost: number | null;
   notes: string | null;
   block_geometry?: [number, number][];
+  planning?: import('./planning').PlanningDetails;
+  block_id?: string;
 }
 
 export interface ActiveBlock {

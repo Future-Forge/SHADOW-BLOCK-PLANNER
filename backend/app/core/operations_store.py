@@ -1,19 +1,23 @@
-"""Process-scoped ledger for committed Shadow Block operations and CSV reports."""
+"""SQLite operation ledger. Timetables are never modified by simulations."""
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
-from datetime import datetime
+import json
+import os
+import sqlite3
+from contextlib import contextmanager
+from dataclasses import dataclass, asdict
+from datetime import datetime, date
 from io import StringIO
-from threading import Lock
-from typing import Iterable
+from pathlib import Path
+from threading import RLock
 from uuid import uuid4
 
 
 @dataclass(frozen=True)
 class BlockOperation:
     block_id: str
-    created_at: datetime
+    created_at: str
     department: str
     corridor: str
     from_station: str
@@ -21,65 +25,75 @@ class BlockOperation:
     start_time: str
     duration_minutes: int
     impacted_trains: tuple[str, ...]
+    operation_date: str
+    status: str = 'ACTIVE'
+    snapshot: dict | None = None
 
 
 class OperationStore:
-    """Small thread-safe cache suitable for the app's in-memory deployment model."""
+    def __init__(self, path=None):
+        path = path or os.environ.get('SHADOW_BLOCK_DB') or str(Path(__file__).resolve().parents[2] / 'var' / 'operations.sqlite3')
+        if str(path) != ':memory:':
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+        self._lock = RLock()
+        self.db = sqlite3.connect(str(path), check_same_thread=False, timeout=30)
+        self.db.execute('PRAGMA journal_mode=WAL')
+        self.db.execute('CREATE TABLE IF NOT EXISTS operations (id TEXT PRIMARY KEY, data TEXT NOT NULL)')
+        self.db.commit()
 
-    def __init__(self) -> None:
-        self._operations: list[BlockOperation] = []
-        self._lock = Lock()
-
-    def record(
-        self,
-        *,
-        department: str,
-        corridor: str,
-        from_station: str,
-        to_station: str,
-        start_time: str,
-        duration_minutes: int,
-        impacted_trains: Iterable[str] = (),
-    ) -> BlockOperation:
-        operation = BlockOperation(
-            block_id=f"BLK-{datetime.now().strftime('%Y%m%d')}-{uuid4().hex[:8].upper()}",
-            created_at=datetime.now().astimezone(),
-            department=department,
-            corridor=corridor,
-            from_station=from_station,
-            to_station=to_station,
-            start_time=start_time,
-            duration_minutes=duration_minutes,
-            impacted_trains=tuple(str(train) for train in impacted_trains),
-        )
+    @contextmanager
+    def transaction(self):
+        """Serialize availability re-check + reservation across threads and processes."""
         with self._lock:
-            self._operations.append(operation)
+            self.db.execute('BEGIN IMMEDIATE')
+            try:
+                yield
+                self.db.commit()
+            except Exception:
+                self.db.rollback()
+                raise
+
+    def record(self, *, department, corridor, from_station, to_station, start_time,
+               duration_minutes, impacted_trains=(), operation_date=None, snapshot=None):
+        operation = BlockOperation(
+            block_id=f"BLK-{date.today():%Y%m%d}-{uuid4().hex[:8].upper()}",
+            created_at=datetime.now().astimezone().isoformat(), department=department,
+            corridor=corridor, from_station=from_station, to_station=to_station,
+            start_time=start_time, duration_minutes=duration_minutes,
+            impacted_trains=tuple(str(t) for t in impacted_trains),
+            operation_date=str(operation_date or date.today()), snapshot=snapshot)
+        with self._lock:
+            nested = self.db.in_transaction
+            self.db.execute('INSERT INTO operations VALUES (?, ?)', (operation.block_id, json.dumps(asdict(operation))))
+            if not nested:
+                self.db.commit()
         return operation
 
-    def monthly_csv(self, month: int, year: int) -> str:
-        """Return RFC-compliant CSV for operations committed in the requested month."""
+    def list(self):
         with self._lock:
-            matching = [
-                operation
-                for operation in self._operations
-                if operation.created_at.year == year and operation.created_at.month == month
-            ]
+            return [json.loads(row[0]) for row in self.db.execute('SELECT data FROM operations ORDER BY rowid DESC')]
 
-        output = StringIO(newline="")
+    def close_operation(self, block_id):
+        with self.transaction():
+            row = self.db.execute('SELECT data FROM operations WHERE id=?', (block_id,)).fetchone()
+            if row is None:
+                return False
+            data = json.loads(row[0])
+            data['status'] = 'CLOSED'
+            self.db.execute('UPDATE operations SET data=? WHERE id=?', (json.dumps(data), block_id))
+        return True
+
+    def monthly_csv(self, month, year):
+        output = StringIO(newline='')
         writer = csv.writer(output)
-        writer.writerow([
-            "BlockID", "Department", "Corridor", "From", "To",
-            "StartTime", "Duration", "ImpactedTrains",
-        ])
-        for operation in matching:
-            writer.writerow([
-                operation.block_id,
-                operation.department,
-                operation.corridor,
-                operation.from_station,
-                operation.to_station,
-                operation.start_time,
-                operation.duration_minutes,
-                "; ".join(operation.impacted_trains),
-            ])
+        writer.writerow(['BlockID', 'Department', 'Corridor', 'From', 'To', 'StartTime', 'Duration', 'ImpactedTrains'])
+        for op in self.list():
+            if op['operation_date'][:7] == f'{year:04d}-{month:02d}':
+                cells = [op['block_id'], op['department'], op['corridor'], op['from_station'],
+                         op['to_station'], op['start_time'], op['duration_minutes'], '; '.join(op['impacted_trains'])]
+                writer.writerow(["'" + c if isinstance(c, str) and c.startswith(('=', '+', '-', '@')) else c for c in cells])
         return output.getvalue()
+
+    def close(self):
+        with self._lock:
+            self.db.close()
