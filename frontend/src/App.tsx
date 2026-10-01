@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
@@ -58,6 +58,7 @@ function AppShell() {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [isPlanningLabOpen, setIsPlanningLabOpen] = useState(false);
+  const closePlanningLab = useCallback(() => setIsPlanningLabOpen(false), []);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Dynamic Traffic Pre-Fetch State
@@ -264,7 +265,7 @@ function AppShell() {
       {/* Full-viewport map surface; tactical panels float above it. */}
       <main className="relative h-full w-full">
         <button onClick={() => { setLastDecision(null); setIsPlanningLabOpen(true); }} className="absolute right-6 top-[100px] z-40 rounded-xl border border-emerald-400/50 bg-[#13211d]/95 px-4 py-3 text-sm font-semibold text-emerald-300 shadow-xl">Planning Lab · Weather & history</button>
-        {isPlanningLabOpen && <PlanningLab initialRequest={request} initialDecision={lastDecision} onClose={() => setIsPlanningLabOpen(false)} />}
+        {isPlanningLabOpen && <PlanningLab initialRequest={request} initialDecision={lastDecision} onClose={closePlanningLab} />}
         {/* 3D WebGL / Deck.gl Map */}
         <NetworkMap trains={trains} onBlockClick={() => setIsBlockModalOpen(true)} />
 

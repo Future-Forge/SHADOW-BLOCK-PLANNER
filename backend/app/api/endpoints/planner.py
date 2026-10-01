@@ -1,32 +1,16 @@
-"""
-POST /api/v1/planner/analyze-block
-
-Dispatches a BlockRequest to the appropriate criticality handler:
-  NORMAL    -> gap_finder: zero-delay slot recommendation
-  MAJOR     -> gq_optimizer: MILP-based weighted delay minimization
-  EMERGENCY -> emergency_dispatcher: immediate hold/caution orders
-
-Also exposes /planner/commit-block as a stub that "locks" a previously
-analyzed block -- full WebSocket broadcast wiring lives in main.py's
-/ws/live-feed handler; this endpoint just records the commit decision.
-"""
+"""Scenario analysis, explicit transactional commits, history and replay."""
 from __future__ import annotations
 from datetime import time
 
 from fastapi import APIRouter, Request, HTTPException
 
-from app.core.gap_finder import GapFinder
-from app.core.planning_service import analyze as analyze_plan, canonical
-from app.core.gq_optimizer import solve_major_block_regulation, TrainConflict, CATEGORY_WEIGHTS
-from app.core.emergency_dispatcher import dispatch_emergency_block
-from app.core.timetable_engine import time_to_minutes, minutes_to_time, SectorConflict
+from app.core.planning_service import analyze as analyze_plan
+from app.core.timetable_engine import time_to_minutes
 from app.data.gq_corridors import resolve_track_line, same_leg, STATION_ALIASES
-from app.models.enums import Criticality, BlockDecisionStatus, RegulationAction, TrainCategory, TrackLine
+from app.models.enums import TrackLine
 from app.models.schemas import (
     BlockRequest,
     BlockDecision,
-    AffectedTrain,
-    AlternativeWindow,
     TrafficPreviewRequest,
     TrafficPreviewResponse,
     TrafficPreviewItem,

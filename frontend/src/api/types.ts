@@ -75,7 +75,7 @@ export interface BlockRequest {
   operation_date?: string;
   shared_tasks?: { department: BlockRequest['department']; duration_minutes: number }[];
   parallel_work_confirmed?: boolean;
-  weather?: { mode: 'seasonal' | 'clear' | 'heavy_rain' | 'high_wind' | 'severe'; exposed_work: boolean };
+  weather?: { mode: 'seasonal' | 'clear' | 'heavy_rain' | 'high_wind' | 'severe'; exposed_work: boolean; wind_risk_months?: number[] };
   resource_capacity?: Record<string, number>;
 }
 

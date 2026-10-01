@@ -4,9 +4,11 @@ from app.main import app
 
 
 @pytest.fixture(scope="module")
-def client():
-    with TestClient(app) as test_client:
-        yield test_client
+def client(tmp_path_factory):
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv('SHADOW_BLOCK_DB', str(tmp_path_factory.mktemp('dispatcher') / 'operations.sqlite3'))
+        with TestClient(app) as test_client:
+            yield test_client
 
 
 def test_dispatcher_operational_tms_smms_query(client):
@@ -85,8 +87,15 @@ def test_dispatcher_emergency_block_directive(client):
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["action_triggered"] == "EXECUTE_BLOCK"
-    assert "block_id" in data["payload"]
+    # Occupied sections must not bypass clearance just because the AI says emergency.
+    assert data['payload']['department'] == 'TDMS'
+    if data['payload']['status'] == 'PENDING_REVIEW':
+        assert data['action_triggered'] == 'ANALYZE_GAP'
+        assert 'block_id' not in data['payload']
+        assert data['payload']['planning']['blocking_reasons']
+    else:
+        assert data['action_triggered'] == 'EXECUTE_BLOCK'
+        assert 'block_id' in data['payload']
 
 
 def test_dispatcher_train_telemetry_directive(client):

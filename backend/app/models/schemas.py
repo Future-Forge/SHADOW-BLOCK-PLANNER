@@ -8,7 +8,7 @@ for the planner + chat API surface.
 from __future__ import annotations
 
 from datetime import time, date
-from typing import Literal
+from typing import Literal, Annotated
 from typing import Optional
 
 from pydantic import BaseModel, Field, ConfigDict, field_validator
@@ -142,6 +142,7 @@ class SharedTask(BaseModel):
 class WeatherScenario(BaseModel):
     mode: Literal['seasonal', 'clear', 'heavy_rain', 'high_wind', 'severe'] = 'seasonal'
     exposed_work: bool = False
+    wind_risk_months: list[Annotated[int, Field(ge=1, le=12)]] = Field(default_factory=list, max_length=12)
 
 
 class BlockRequest(BaseModel):

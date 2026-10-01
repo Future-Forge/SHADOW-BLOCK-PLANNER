@@ -48,6 +48,10 @@ export function PlanningLab({ initialRequest, initialDecision, onClose }: {
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     closeRef.current?.focus();
+    return () => previous?.focus();
+  }, []);
+
+  useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !busy) onClose();
       if (event.key === 'Tab') {
@@ -59,11 +63,17 @@ export function PlanningLab({ initialRequest, initialDecision, onClose }: {
       }
     };
     document.addEventListener('keydown', key);
-    return () => { document.removeEventListener('keydown', key); previous?.focus(); };
+    return () => { document.removeEventListener('keydown', key); };
   }, [onClose, busy]);
 
   const loadHistory = async () => setHistory(await planningFetch<Operation[]>('/operations'));
-  useEffect(() => { if (tab === 'history') loadHistory().catch(err => setError(String(err))); }, [tab]);
+  useEffect(() => {
+    if (tab !== 'history') return;
+    let cancelled = false;
+    planningFetch<Operation[]>('/operations').then(rows => { if (!cancelled) setHistory(rows); })
+      .catch(err => { if (!cancelled) setError(String(err)); });
+    return () => { cancelled = true; };
+  }, [tab]);
   const change = (patch: Partial<BlockRequest>) => { setRequest(prev => ({ ...prev, ...patch })); setDecision(null); setMessage(''); setError(''); };
   const work = async (fn: () => Promise<void>) => {
     setBusy(true); setError(''); setMessage('');
@@ -113,6 +123,7 @@ export function PlanningLab({ initialRequest, initialDecision, onClose }: {
             <div className={card}><h3 className="mb-3 flex items-center gap-2 font-medium"><CloudRain size={17} /> Weather constraints</h3>
               <label className="text-xs">Weather scenario<select aria-label="Weather scenario" className={field} value={request.weather?.mode} onChange={e => change({ weather: { ...request.weather!, mode: e.target.value as NonNullable<BlockRequest['weather']>['mode'] } })}><option value="seasonal">Automatic · month & region</option><option value="clear">Clear-weather scenario</option><option value="heavy_rain">Heavy-rain scenario</option><option value="high_wind">High-wind scenario</option><option value="severe">Severe-weather scenario</option></select></label>
               <label className="mt-3 flex gap-2 text-xs"><input type="checkbox" checked={request.weather?.exposed_work} onChange={e => change({ weather: { ...request.weather!, exposed_work: e.target.checked } })} />Exposed / elevated work</label>
+              <details className="mt-3 text-xs"><summary className="cursor-pointer text-slate-300">Site-specific wind-risk months</summary><p className="my-2 text-slate-400">Select locally assessed risk months for this section. Used in Automatic mode; these are scenario inputs, not IMD wind forecasts.</p><div className="grid grid-cols-4 gap-2">{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((month, i) => <label key={month} className="flex gap-1"><input type="checkbox" checked={request.weather?.wind_risk_months?.includes(i + 1) || false} onChange={e => change({ weather: { ...request.weather!, wind_risk_months: e.target.checked ? [...(request.weather?.wind_risk_months || []), i + 1] : request.weather?.wind_risk_months?.filter(m => m !== i + 1) } })} />{month}</label>)}</div></details>
               <p className="mt-3 text-xs leading-relaxed text-amber-200/80">Seasonal assumptions, not live weather. Rain extends work and delays train arrivals. Severe weather or high-wind exposed/traction work requires review. No trains are deleted.</p>
             </div>
             <details className={card}><summary className="cursor-pointer text-sm">Scenario resource capacity</summary><p className="my-3 text-xs text-slate-400">Operator-entered teams, department equipment kits and vehicles; shared across overlapping reservations. Not connected to live inventory.</p><div className="space-y-2">{Object.entries(request.resource_capacity || capacities).map(([key, value]) => <label key={key} className="flex items-center justify-between gap-3 text-xs">{key.replaceAll('_', ' ')}<input aria-label={key} type="number" min={0} max={100} className={`${field} !mt-0 !w-20`} value={value} onChange={e => change({ resource_capacity: { ...request.resource_capacity, [key]: Number(e.target.value) } })} /></label>)}</div></details>

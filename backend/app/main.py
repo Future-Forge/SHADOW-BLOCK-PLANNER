@@ -3,8 +3,8 @@ FastAPI application entrypoint for the GQ Block Planner (Shadow Block)
 backend.
 
 Loads the real dataset once at startup into app.state.gq_bundle, then
-exposes the planner/live-map/stations/chat routers against it. No
-external database -- everything lives in memory per the mission spec.
+exposes planner/live-map/stations/chat routers. Timetable data stays in memory;
+committed planning snapshots are stored in a local SQLite ledger.
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     app.state.gq_bundle = build_gq_data_bundle(settings.DATA_DIR)
     app.state.operation_store = OperationStore()
     # The dispatcher receives the data bundle directly, so expose the same
-    # process-scoped operations cache there for its report-generation tool.
+    # persistent operations ledger there for its report-generation tool.
     app.state.gq_bundle.operation_store = app.state.operation_store
     print(
         f"[startup] GQ data bundle loaded: "

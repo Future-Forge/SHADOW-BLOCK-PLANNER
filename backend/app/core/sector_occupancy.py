@@ -1,5 +1,5 @@
 """Shared, half-open sector occupancy for planning (not signalling authority)."""
-from datetime import date, timedelta
+from datetime import timedelta
 from math import ceil, floor
 
 from app.models.enums import TrackLine

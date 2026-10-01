@@ -16,15 +16,11 @@ from datetime import datetime
 from typing import Any, Optional
 
 from app.config import settings
-from app.core.gap_finder import GapFinder
-from app.core.emergency_dispatcher import dispatch_emergency_block
 from app.core.live_positions import compute_live_trains
 from app.core.timetable_engine import time_to_minutes, minutes_to_time
 from app.data.gq_corridors import resolve_track_line, same_leg
-from app.models.enums import Criticality, Department, TrackLine, TrainCategory
+from app.models.enums import TrackLine, TrainCategory
 from app.models.schemas import (
-    BlockDecision,
-    BlockDecisionStatus,
     BlockRequest,
     DispatcherChatResponse,
     FlyToTarget,
