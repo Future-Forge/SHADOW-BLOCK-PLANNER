@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-10-01 22:32:09",
+  "environment": "Docker Localhost (PostgreSQL 15 + Redis 7)",
+  "benchmarks": [
+    {
+      "name": "XGBoost Defect Criticality Inference Concurrency",
+      "requests_count": 100,
+      "mean_ms": 7.46,
+      "p50_ms": 7.34,
+      "p95_ms": 10.81,
+      "p99_ms": 16.5,
+      "passed": true
+    },
+    {
+      "name": "Sub-Second Micro-MILP Emergency Re-Optimizer",
+      "requests_count": 50,
+      "mean_ms": 101.09,
+      "p50_ms": 95.63,
+      "p95_ms": 139.78,
+      "p99_ms": 164.4,
+      "passed": true
+    },
+    {
+      "name": "Real-Time WebSocket Event Stream Handshake",
+      "handshake_latency_ms": 29.1,
+      "status": "CONNECTED",
+      "passed": true
+    }
+  ],
+  "overall_status": "PASSED"
+}

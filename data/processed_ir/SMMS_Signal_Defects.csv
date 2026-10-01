@@ -1,0 +1,601 @@
+defect_id,gq_corridor,station_code,asset_type,failure_mode,urgency_level,required_block_hours,logged_timestamp
+SMS-HC-2001,Howrah-Chennai,CNB,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-01 15:00:00
+SMS-DH-2002,Delhi-Howrah,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 01:00:00
+SMS-MC-2003,Mumbai-Chennai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-01 21:00:00
+SMS-HC-2004,Howrah-Chennai,MAS,Track Circuit,Signal Insulation Failure,HIGH,2.0,2026-10-04 15:00:00
+SMS-MC-2005,Mumbai-Chennai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 16:00:00
+SMS-DM-2006,Delhi-Mumbai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 20:00:00
+SMS-HC-2007,Howrah-Chennai,MAS,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-03 06:00:00
+SMS-DH-2008,Delhi-Howrah,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 23:00:00
+SMS-MC-2009,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 20:00:00
+SMS-HC-2010,Howrah-Chennai,NDLS,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-01 20:00:00
+SMS-HC-2011,Howrah-Chennai,MMCT,Axle Counter,Signal Insulation Failure,CRITICAL,2.0,2026-10-04 06:00:00
+SMS-DM-2012,Delhi-Mumbai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-08 04:00:00
+SMS-MC-2013,Mumbai-Chennai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 18:00:00
+SMS-HC-2014,Howrah-Chennai,HWH,Point Machine,Signal Insulation Failure,CRITICAL,2.0,2026-10-07 12:00:00
+SMS-MC-2015,Mumbai-Chennai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-04 06:00:00
+SMS-DH-2016,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 09:00:00
+SMS-DH-2017,Delhi-Howrah,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 17:00:00
+SMS-HC-2018,Howrah-Chennai,MAS,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-03 10:00:00
+SMS-DM-2019,Delhi-Mumbai,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 18:00:00
+SMS-HC-2020,Howrah-Chennai,HWH,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-03 03:00:00
+SMS-HC-2021,Howrah-Chennai,KOTA,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-04 15:00:00
+SMS-DH-2022,Delhi-Howrah,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-01 23:00:00
+SMS-MC-2023,Mumbai-Chennai,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-02 05:00:00
+SMS-DH-2024,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 19:00:00
+SMS-HC-2025,Howrah-Chennai,NDLS,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-01 22:00:00
+SMS-HC-2026,Howrah-Chennai,HWH,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-07 07:00:00
+SMS-DH-2027,Delhi-Howrah,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 04:00:00
+SMS-DH-2028,Delhi-Howrah,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 11:00:00
+SMS-MC-2029,Mumbai-Chennai,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 02:00:00
+SMS-HC-2030,Howrah-Chennai,MMCT,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-03 11:00:00
+SMS-HC-2031,Howrah-Chennai,MMCT,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-03 15:00:00
+SMS-MC-2032,Mumbai-Chennai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-03 02:00:00
+SMS-HC-2033,Howrah-Chennai,KOTA,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-02 14:00:00
+SMS-HC-2034,Howrah-Chennai,NDLS,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-06 22:00:00
+SMS-MC-2035,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 17:00:00
+SMS-MC-2036,Mumbai-Chennai,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 13:00:00
+SMS-HC-2037,Howrah-Chennai,NDLS,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-04 19:00:00
+SMS-MC-2038,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 12:00:00
+SMS-DM-2039,Delhi-Mumbai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 01:00:00
+SMS-HC-2040,Howrah-Chennai,NDLS,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-03 21:00:00
+SMS-MC-2041,Mumbai-Chennai,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 23:00:00
+SMS-DH-2042,Delhi-Howrah,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 20:00:00
+SMS-HC-2043,Howrah-Chennai,BRC,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-03 01:00:00
+SMS-MC-2044,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 14:00:00
+SMS-DM-2045,Delhi-Mumbai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-04 17:00:00
+SMS-DH-2046,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 10:00:00
+SMS-DM-2047,Delhi-Mumbai,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-05 07:00:00
+SMS-HC-2048,Howrah-Chennai,KOTA,Relay Interlocking,Signal Insulation Failure,HIGH,2.0,2026-10-07 17:00:00
+SMS-DM-2049,Delhi-Mumbai,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 05:00:00
+SMS-DH-2050,Delhi-Howrah,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-04 01:00:00
+SMS-DH-2051,Delhi-Howrah,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 07:00:00
+SMS-DH-2052,Delhi-Howrah,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 14:00:00
+SMS-DM-2053,Delhi-Mumbai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 23:00:00
+SMS-HC-2054,Howrah-Chennai,MMCT,Track Circuit,Signal Insulation Failure,HIGH,2.0,2026-10-03 02:00:00
+SMS-DH-2055,Delhi-Howrah,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-04 18:00:00
+SMS-MC-2056,Mumbai-Chennai,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 22:00:00
+SMS-DM-2057,Delhi-Mumbai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 17:00:00
+SMS-DH-2058,Delhi-Howrah,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 02:00:00
+SMS-DH-2059,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 02:00:00
+SMS-DH-2060,Delhi-Howrah,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-05 20:00:00
+SMS-MC-2061,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 07:00:00
+SMS-DH-2062,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-05 22:00:00
+SMS-MC-2063,Mumbai-Chennai,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 00:00:00
+SMS-DM-2064,Delhi-Mumbai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 13:00:00
+SMS-MC-2065,Mumbai-Chennai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-03 19:00:00
+SMS-MC-2066,Mumbai-Chennai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 13:00:00
+SMS-DM-2067,Delhi-Mumbai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 03:00:00
+SMS-DM-2068,Delhi-Mumbai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 14:00:00
+SMS-MC-2069,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 18:00:00
+SMS-MC-2070,Mumbai-Chennai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 11:00:00
+SMS-DH-2071,Delhi-Howrah,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 13:00:00
+SMS-HC-2072,Howrah-Chennai,CNB,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-08 00:00:00
+SMS-HC-2073,Howrah-Chennai,MMCT,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-06 15:00:00
+SMS-HC-2074,Howrah-Chennai,CNB,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-03 23:00:00
+SMS-DM-2075,Delhi-Mumbai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 11:00:00
+SMS-HC-2076,Howrah-Chennai,HWH,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-01 14:00:00
+SMS-DH-2077,Delhi-Howrah,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 00:00:00
+SMS-DM-2078,Delhi-Mumbai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-04 12:00:00
+SMS-DM-2079,Delhi-Mumbai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 06:00:00
+SMS-DM-2080,Delhi-Mumbai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-01 19:00:00
+SMS-DM-2081,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 18:00:00
+SMS-DH-2082,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 13:00:00
+SMS-DM-2083,Delhi-Mumbai,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-02 02:00:00
+SMS-DH-2084,Delhi-Howrah,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-07 08:00:00
+SMS-MC-2085,Mumbai-Chennai,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 19:00:00
+SMS-HC-2086,Howrah-Chennai,MMCT,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-02 01:00:00
+SMS-HC-2087,Howrah-Chennai,MAS,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-04 15:00:00
+SMS-HC-2088,Howrah-Chennai,MMCT,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-07 22:00:00
+SMS-DH-2089,Delhi-Howrah,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-03 19:00:00
+SMS-DM-2090,Delhi-Mumbai,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 23:00:00
+SMS-HC-2091,Howrah-Chennai,MMCT,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-03 16:00:00
+SMS-MC-2092,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 02:00:00
+SMS-MC-2093,Mumbai-Chennai,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-06 18:00:00
+SMS-DM-2094,Delhi-Mumbai,MMCT,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-02 13:00:00
+SMS-HC-2095,Howrah-Chennai,MAS,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-03 03:00:00
+SMS-DH-2096,Delhi-Howrah,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-06 01:00:00
+SMS-HC-2097,Howrah-Chennai,CNB,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-02 12:00:00
+SMS-DH-2098,Delhi-Howrah,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-06 03:00:00
+SMS-DM-2099,Delhi-Mumbai,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 12:00:00
+SMS-DM-2100,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 08:00:00
+SMS-DM-2101,Delhi-Mumbai,MMCT,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 13:00:00
+SMS-DH-2102,Delhi-Howrah,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-06 08:00:00
+SMS-MC-2103,Mumbai-Chennai,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-01 12:00:00
+SMS-MC-2104,Mumbai-Chennai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 16:00:00
+SMS-HC-2105,Howrah-Chennai,NDLS,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-04 15:00:00
+SMS-DM-2106,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-02 17:00:00
+SMS-DH-2107,Delhi-Howrah,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 17:00:00
+SMS-DM-2108,Delhi-Mumbai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 18:00:00
+SMS-MC-2109,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 23:00:00
+SMS-HC-2110,Howrah-Chennai,NDLS,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-04 17:00:00
+SMS-DM-2111,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 12:00:00
+SMS-DM-2112,Delhi-Mumbai,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 22:00:00
+SMS-HC-2113,Howrah-Chennai,KOTA,Point Machine,Signal Insulation Failure,CRITICAL,2.0,2026-10-03 16:00:00
+SMS-DH-2114,Delhi-Howrah,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 12:00:00
+SMS-HC-2115,Howrah-Chennai,KOTA,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-01 17:00:00
+SMS-DM-2116,Delhi-Mumbai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 12:00:00
+SMS-MC-2117,Mumbai-Chennai,MMCT,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 12:00:00
+SMS-HC-2118,Howrah-Chennai,NDLS,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-05 00:00:00
+SMS-MC-2119,Mumbai-Chennai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 06:00:00
+SMS-DH-2120,Delhi-Howrah,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 16:00:00
+SMS-DH-2121,Delhi-Howrah,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 06:00:00
+SMS-HC-2122,Howrah-Chennai,MAS,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-03 21:00:00
+SMS-MC-2123,Mumbai-Chennai,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-03 01:00:00
+SMS-DM-2124,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 18:00:00
+SMS-DM-2125,Delhi-Mumbai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 18:00:00
+SMS-MC-2126,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 11:00:00
+SMS-DH-2127,Delhi-Howrah,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 10:00:00
+SMS-DM-2128,Delhi-Mumbai,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 01:00:00
+SMS-DM-2129,Delhi-Mumbai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-02 09:00:00
+SMS-HC-2130,Howrah-Chennai,CNB,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-04 04:00:00
+SMS-HC-2131,Howrah-Chennai,KOTA,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-01 22:00:00
+SMS-DH-2132,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 03:00:00
+SMS-HC-2133,Howrah-Chennai,KOTA,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-03 20:00:00
+SMS-DH-2134,Delhi-Howrah,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-05 21:00:00
+SMS-MC-2135,Mumbai-Chennai,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 20:00:00
+SMS-DH-2136,Delhi-Howrah,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 10:00:00
+SMS-DM-2137,Delhi-Mumbai,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 11:00:00
+SMS-MC-2138,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 04:00:00
+SMS-DH-2139,Delhi-Howrah,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-04 11:00:00
+SMS-DH-2140,Delhi-Howrah,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-04 02:00:00
+SMS-HC-2141,Howrah-Chennai,HWH,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-08 01:00:00
+SMS-DM-2142,Delhi-Mumbai,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 05:00:00
+SMS-DM-2143,Delhi-Mumbai,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 00:00:00
+SMS-DH-2144,Delhi-Howrah,MMCT,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 06:00:00
+SMS-MC-2145,Mumbai-Chennai,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 21:00:00
+SMS-HC-2146,Howrah-Chennai,NDLS,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-04 19:00:00
+SMS-MC-2147,Mumbai-Chennai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 02:00:00
+SMS-HC-2148,Howrah-Chennai,NDLS,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-03 23:00:00
+SMS-HC-2149,Howrah-Chennai,CNB,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-06 16:00:00
+SMS-DH-2150,Delhi-Howrah,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 16:00:00
+SMS-HC-2151,Howrah-Chennai,KOTA,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-01 18:00:00
+SMS-HC-2152,Howrah-Chennai,BRC,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-03 07:00:00
+SMS-MC-2153,Mumbai-Chennai,MMCT,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 18:00:00
+SMS-DH-2154,Delhi-Howrah,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 16:00:00
+SMS-MC-2155,Mumbai-Chennai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 15:00:00
+SMS-DH-2156,Delhi-Howrah,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 04:00:00
+SMS-DM-2157,Delhi-Mumbai,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 23:00:00
+SMS-MC-2158,Mumbai-Chennai,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 18:00:00
+SMS-MC-2159,Mumbai-Chennai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 16:00:00
+SMS-MC-2160,Mumbai-Chennai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-02 21:00:00
+SMS-MC-2161,Mumbai-Chennai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-08 02:00:00
+SMS-MC-2162,Mumbai-Chennai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 15:00:00
+SMS-DH-2163,Delhi-Howrah,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-05 11:00:00
+SMS-MC-2164,Mumbai-Chennai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 11:00:00
+SMS-DH-2165,Delhi-Howrah,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-07 04:00:00
+SMS-DH-2166,Delhi-Howrah,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 18:00:00
+SMS-DM-2167,Delhi-Mumbai,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 14:00:00
+SMS-DM-2168,Delhi-Mumbai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-08 02:00:00
+SMS-MC-2169,Mumbai-Chennai,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 19:00:00
+SMS-HC-2170,Howrah-Chennai,BRC,Relay Interlocking,Signal Insulation Failure,HIGH,2.0,2026-10-07 11:00:00
+SMS-MC-2171,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 02:00:00
+SMS-MC-2172,Mumbai-Chennai,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-03 19:00:00
+SMS-HC-2173,Howrah-Chennai,MAS,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-03 12:00:00
+SMS-HC-2174,Howrah-Chennai,KOTA,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-02 09:00:00
+SMS-MC-2175,Mumbai-Chennai,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 01:00:00
+SMS-DM-2176,Delhi-Mumbai,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 17:00:00
+SMS-DH-2177,Delhi-Howrah,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-07 03:00:00
+SMS-HC-2178,Howrah-Chennai,BRC,Relay Interlocking,Signal Insulation Failure,HIGH,2.0,2026-10-02 11:00:00
+SMS-DH-2179,Delhi-Howrah,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 03:00:00
+SMS-MC-2180,Mumbai-Chennai,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 15:00:00
+SMS-MC-2181,Mumbai-Chennai,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-08 05:00:00
+SMS-HC-2182,Howrah-Chennai,BRC,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-01 22:00:00
+SMS-HC-2183,Howrah-Chennai,HWH,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-06 13:00:00
+SMS-DH-2184,Delhi-Howrah,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 19:00:00
+SMS-MC-2185,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-07 23:00:00
+SMS-HC-2186,Howrah-Chennai,BRC,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-05 18:00:00
+SMS-MC-2187,Mumbai-Chennai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-08 05:00:00
+SMS-MC-2188,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-07 03:00:00
+SMS-DM-2189,Delhi-Mumbai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 10:00:00
+SMS-HC-2190,Howrah-Chennai,CNB,Point Machine,Signal Insulation Failure,CRITICAL,2.0,2026-10-03 00:00:00
+SMS-DH-2191,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-03 01:00:00
+SMS-DM-2192,Delhi-Mumbai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 21:00:00
+SMS-HC-2193,Howrah-Chennai,MAS,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-01 17:00:00
+SMS-DH-2194,Delhi-Howrah,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-05 08:00:00
+SMS-HC-2195,Howrah-Chennai,HWH,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-05 23:00:00
+SMS-DH-2196,Delhi-Howrah,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-04 06:00:00
+SMS-HC-2197,Howrah-Chennai,HWH,Relay Interlocking,Signal Insulation Failure,HIGH,2.0,2026-10-01 13:00:00
+SMS-HC-2198,Howrah-Chennai,CNB,Track Circuit,Signal Insulation Failure,HIGH,2.0,2026-10-07 02:00:00
+SMS-DH-2199,Delhi-Howrah,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 09:00:00
+SMS-DM-2200,Delhi-Mumbai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 07:00:00
+SMS-DM-2201,Delhi-Mumbai,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 02:00:00
+SMS-DH-2202,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-01 13:00:00
+SMS-DH-2203,Delhi-Howrah,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 05:00:00
+SMS-DH-2204,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-02 08:00:00
+SMS-DM-2205,Delhi-Mumbai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-08 02:00:00
+SMS-DH-2206,Delhi-Howrah,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 23:00:00
+SMS-HC-2207,Howrah-Chennai,HWH,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-05 03:00:00
+SMS-DM-2208,Delhi-Mumbai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 12:00:00
+SMS-DH-2209,Delhi-Howrah,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-08 04:00:00
+SMS-MC-2210,Mumbai-Chennai,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-02 04:00:00
+SMS-DM-2211,Delhi-Mumbai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 00:00:00
+SMS-DM-2212,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 10:00:00
+SMS-DM-2213,Delhi-Mumbai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-08 00:00:00
+SMS-MC-2214,Mumbai-Chennai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 10:00:00
+SMS-DM-2215,Delhi-Mumbai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 17:00:00
+SMS-MC-2216,Mumbai-Chennai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-06 09:00:00
+SMS-HC-2217,Howrah-Chennai,HWH,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-07 18:00:00
+SMS-MC-2218,Mumbai-Chennai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 13:00:00
+SMS-MC-2219,Mumbai-Chennai,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-02 21:00:00
+SMS-DM-2220,Delhi-Mumbai,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 00:00:00
+SMS-MC-2221,Mumbai-Chennai,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 00:00:00
+SMS-DM-2222,Delhi-Mumbai,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 13:00:00
+SMS-DH-2223,Delhi-Howrah,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-06 20:00:00
+SMS-DH-2224,Delhi-Howrah,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 08:00:00
+SMS-HC-2225,Howrah-Chennai,CNB,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-02 15:00:00
+SMS-DH-2226,Delhi-Howrah,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-07 17:00:00
+SMS-HC-2227,Howrah-Chennai,HWH,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-02 11:00:00
+SMS-DM-2228,Delhi-Mumbai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 08:00:00
+SMS-MC-2229,Mumbai-Chennai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 00:00:00
+SMS-HC-2230,Howrah-Chennai,BRC,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-08 04:00:00
+SMS-DM-2231,Delhi-Mumbai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-05 05:00:00
+SMS-DH-2232,Delhi-Howrah,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 23:00:00
+SMS-DH-2233,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-06 13:00:00
+SMS-DH-2234,Delhi-Howrah,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-04 19:00:00
+SMS-HC-2235,Howrah-Chennai,MAS,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-07 18:00:00
+SMS-MC-2236,Mumbai-Chennai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-01 15:00:00
+SMS-DH-2237,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 00:00:00
+SMS-DM-2238,Delhi-Mumbai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 21:00:00
+SMS-DH-2239,Delhi-Howrah,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 21:00:00
+SMS-HC-2240,Howrah-Chennai,KOTA,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-02 17:00:00
+SMS-DH-2241,Delhi-Howrah,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 03:00:00
+SMS-HC-2242,Howrah-Chennai,MAS,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-06 18:00:00
+SMS-HC-2243,Howrah-Chennai,BRC,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-04 21:00:00
+SMS-MC-2244,Mumbai-Chennai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-03 18:00:00
+SMS-DH-2245,Delhi-Howrah,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 21:00:00
+SMS-HC-2246,Howrah-Chennai,KOTA,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-07 14:00:00
+SMS-DM-2247,Delhi-Mumbai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 20:00:00
+SMS-MC-2248,Mumbai-Chennai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 18:00:00
+SMS-DM-2249,Delhi-Mumbai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 22:00:00
+SMS-DH-2250,Delhi-Howrah,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-06 20:00:00
+SMS-HC-2251,Howrah-Chennai,BRC,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-07 03:00:00
+SMS-HC-2252,Howrah-Chennai,MMCT,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-03 21:00:00
+SMS-DM-2253,Delhi-Mumbai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 22:00:00
+SMS-HC-2254,Howrah-Chennai,MMCT,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-04 02:00:00
+SMS-DH-2255,Delhi-Howrah,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 16:00:00
+SMS-MC-2256,Mumbai-Chennai,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 19:00:00
+SMS-DM-2257,Delhi-Mumbai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 21:00:00
+SMS-DH-2258,Delhi-Howrah,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 00:00:00
+SMS-HC-2259,Howrah-Chennai,MMCT,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-06 00:00:00
+SMS-HC-2260,Howrah-Chennai,MAS,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-02 17:00:00
+SMS-HC-2261,Howrah-Chennai,KOTA,Point Machine,Signal Insulation Failure,CRITICAL,2.0,2026-10-06 04:00:00
+SMS-DM-2262,Delhi-Mumbai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 05:00:00
+SMS-DH-2263,Delhi-Howrah,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 10:00:00
+SMS-HC-2264,Howrah-Chennai,MMCT,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-02 15:00:00
+SMS-HC-2265,Howrah-Chennai,BRC,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-06 12:00:00
+SMS-DM-2266,Delhi-Mumbai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 13:00:00
+SMS-HC-2267,Howrah-Chennai,HWH,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-04 21:00:00
+SMS-MC-2268,Mumbai-Chennai,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-08 01:00:00
+SMS-MC-2269,Mumbai-Chennai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 19:00:00
+SMS-DH-2270,Delhi-Howrah,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-03 23:00:00
+SMS-DH-2271,Delhi-Howrah,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 17:00:00
+SMS-HC-2272,Howrah-Chennai,HWH,Relay Interlocking,Signal Insulation Failure,HIGH,2.0,2026-10-07 08:00:00
+SMS-HC-2273,Howrah-Chennai,NDLS,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-05 13:00:00
+SMS-HC-2274,Howrah-Chennai,CNB,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-04 22:00:00
+SMS-HC-2275,Howrah-Chennai,BRC,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-03 08:00:00
+SMS-MC-2276,Mumbai-Chennai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 23:00:00
+SMS-DM-2277,Delhi-Mumbai,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 00:00:00
+SMS-MC-2278,Mumbai-Chennai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 21:00:00
+SMS-MC-2279,Mumbai-Chennai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-07 07:00:00
+SMS-MC-2280,Mumbai-Chennai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 23:00:00
+SMS-DH-2281,Delhi-Howrah,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 20:00:00
+SMS-DM-2282,Delhi-Mumbai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 09:00:00
+SMS-HC-2283,Howrah-Chennai,BRC,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-02 01:00:00
+SMS-DH-2284,Delhi-Howrah,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 22:00:00
+SMS-DM-2285,Delhi-Mumbai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 15:00:00
+SMS-DM-2286,Delhi-Mumbai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 23:00:00
+SMS-MC-2287,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-02 07:00:00
+SMS-MC-2288,Mumbai-Chennai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 00:00:00
+SMS-HC-2289,Howrah-Chennai,KOTA,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-05 14:00:00
+SMS-HC-2290,Howrah-Chennai,KOTA,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-03 03:00:00
+SMS-DH-2291,Delhi-Howrah,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 15:00:00
+SMS-MC-2292,Mumbai-Chennai,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-01 16:00:00
+SMS-DH-2293,Delhi-Howrah,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-04 22:00:00
+SMS-MC-2294,Mumbai-Chennai,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 10:00:00
+SMS-HC-2295,Howrah-Chennai,NDLS,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-07 16:00:00
+SMS-MC-2296,Mumbai-Chennai,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 10:00:00
+SMS-DM-2297,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 08:00:00
+SMS-HC-2298,Howrah-Chennai,CNB,Axle Counter,Signal Insulation Failure,CRITICAL,2.0,2026-10-05 19:00:00
+SMS-DH-2299,Delhi-Howrah,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 01:00:00
+SMS-MC-2300,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 03:00:00
+SMS-HC-2301,Howrah-Chennai,CNB,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-07 03:00:00
+SMS-MC-2302,Mumbai-Chennai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 08:00:00
+SMS-MC-2303,Mumbai-Chennai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 16:00:00
+SMS-DH-2304,Delhi-Howrah,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 22:00:00
+SMS-MC-2305,Mumbai-Chennai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-04 23:00:00
+SMS-HC-2306,Howrah-Chennai,MMCT,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-06 16:00:00
+SMS-DM-2307,Delhi-Mumbai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 16:00:00
+SMS-HC-2308,Howrah-Chennai,BRC,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-04 16:00:00
+SMS-HC-2309,Howrah-Chennai,MMCT,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-03 17:00:00
+SMS-MC-2310,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 06:00:00
+SMS-MC-2311,Mumbai-Chennai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 17:00:00
+SMS-HC-2312,Howrah-Chennai,NDLS,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-05 10:00:00
+SMS-HC-2313,Howrah-Chennai,BRC,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-07 06:00:00
+SMS-HC-2314,Howrah-Chennai,BRC,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-04 14:00:00
+SMS-MC-2315,Mumbai-Chennai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-01 13:00:00
+SMS-HC-2316,Howrah-Chennai,KOTA,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-01 12:00:00
+SMS-MC-2317,Mumbai-Chennai,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 12:00:00
+SMS-DM-2318,Delhi-Mumbai,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 09:00:00
+SMS-DH-2319,Delhi-Howrah,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 10:00:00
+SMS-HC-2320,Howrah-Chennai,HWH,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-05 00:00:00
+SMS-MC-2321,Mumbai-Chennai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 17:00:00
+SMS-MC-2322,Mumbai-Chennai,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 17:00:00
+SMS-HC-2323,Howrah-Chennai,CNB,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-03 14:00:00
+SMS-DH-2324,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 14:00:00
+SMS-HC-2325,Howrah-Chennai,NDLS,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-04 21:00:00
+SMS-DM-2326,Delhi-Mumbai,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 23:00:00
+SMS-DH-2327,Delhi-Howrah,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 13:00:00
+SMS-DM-2328,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-01 09:00:00
+SMS-MC-2329,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-01 20:00:00
+SMS-HC-2330,Howrah-Chennai,CNB,Relay Interlocking,Signal Insulation Failure,HIGH,2.0,2026-10-05 05:00:00
+SMS-DM-2331,Delhi-Mumbai,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 08:00:00
+SMS-DH-2332,Delhi-Howrah,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 04:00:00
+SMS-HC-2333,Howrah-Chennai,KOTA,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-01 14:00:00
+SMS-HC-2334,Howrah-Chennai,HWH,Track Circuit,Signal Insulation Failure,HIGH,2.0,2026-10-05 15:00:00
+SMS-DH-2335,Delhi-Howrah,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 02:00:00
+SMS-DM-2336,Delhi-Mumbai,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 13:00:00
+SMS-MC-2337,Mumbai-Chennai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 16:00:00
+SMS-DH-2338,Delhi-Howrah,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 15:00:00
+SMS-DH-2339,Delhi-Howrah,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 11:00:00
+SMS-DH-2340,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-04 19:00:00
+SMS-DM-2341,Delhi-Mumbai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 22:00:00
+SMS-DH-2342,Delhi-Howrah,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 14:00:00
+SMS-DH-2343,Delhi-Howrah,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-08 05:00:00
+SMS-DH-2344,Delhi-Howrah,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 03:00:00
+SMS-DM-2345,Delhi-Mumbai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 00:00:00
+SMS-DM-2346,Delhi-Mumbai,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 04:00:00
+SMS-DH-2347,Delhi-Howrah,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 20:00:00
+SMS-DM-2348,Delhi-Mumbai,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-05 07:00:00
+SMS-DM-2349,Delhi-Mumbai,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 16:00:00
+SMS-HC-2350,Howrah-Chennai,BRC,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-02 10:00:00
+SMS-DH-2351,Delhi-Howrah,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 04:00:00
+SMS-DH-2352,Delhi-Howrah,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 16:00:00
+SMS-MC-2353,Mumbai-Chennai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 00:00:00
+SMS-DH-2354,Delhi-Howrah,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-02 21:00:00
+SMS-DM-2355,Delhi-Mumbai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-07 13:00:00
+SMS-DH-2356,Delhi-Howrah,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-03 16:00:00
+SMS-MC-2357,Mumbai-Chennai,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 16:00:00
+SMS-HC-2358,Howrah-Chennai,HWH,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-04 02:00:00
+SMS-DH-2359,Delhi-Howrah,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-02 11:00:00
+SMS-DM-2360,Delhi-Mumbai,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-04 10:00:00
+SMS-DH-2361,Delhi-Howrah,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 02:00:00
+SMS-MC-2362,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 23:00:00
+SMS-MC-2363,Mumbai-Chennai,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 21:00:00
+SMS-DM-2364,Delhi-Mumbai,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 12:00:00
+SMS-DM-2365,Delhi-Mumbai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-07 19:00:00
+SMS-HC-2366,Howrah-Chennai,KOTA,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-02 13:00:00
+SMS-DH-2367,Delhi-Howrah,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 23:00:00
+SMS-DH-2368,Delhi-Howrah,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 20:00:00
+SMS-MC-2369,Mumbai-Chennai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-07 09:00:00
+SMS-DM-2370,Delhi-Mumbai,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-06 11:00:00
+SMS-DM-2371,Delhi-Mumbai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-08 03:00:00
+SMS-DM-2372,Delhi-Mumbai,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 22:00:00
+SMS-MC-2373,Mumbai-Chennai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 08:00:00
+SMS-MC-2374,Mumbai-Chennai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-01 23:00:00
+SMS-DM-2375,Delhi-Mumbai,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-04 05:00:00
+SMS-MC-2376,Mumbai-Chennai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 12:00:00
+SMS-MC-2377,Mumbai-Chennai,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 11:00:00
+SMS-DM-2378,Delhi-Mumbai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-02 14:00:00
+SMS-DM-2379,Delhi-Mumbai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 16:00:00
+SMS-DH-2380,Delhi-Howrah,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 07:00:00
+SMS-HC-2381,Howrah-Chennai,KOTA,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-04 13:00:00
+SMS-MC-2382,Mumbai-Chennai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 18:00:00
+SMS-DM-2383,Delhi-Mumbai,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-03 19:00:00
+SMS-DH-2384,Delhi-Howrah,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 21:00:00
+SMS-DH-2385,Delhi-Howrah,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 17:00:00
+SMS-HC-2386,Howrah-Chennai,MAS,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-05 07:00:00
+SMS-DM-2387,Delhi-Mumbai,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 16:00:00
+SMS-MC-2388,Mumbai-Chennai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 15:00:00
+SMS-DM-2389,Delhi-Mumbai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 12:00:00
+SMS-HC-2390,Howrah-Chennai,MAS,Axle Counter,Signal Insulation Failure,CRITICAL,2.0,2026-10-07 20:00:00
+SMS-MC-2391,Mumbai-Chennai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 07:00:00
+SMS-DH-2392,Delhi-Howrah,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-03 09:00:00
+SMS-MC-2393,Mumbai-Chennai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-03 20:00:00
+SMS-HC-2394,Howrah-Chennai,NDLS,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-06 16:00:00
+SMS-HC-2395,Howrah-Chennai,KOTA,Relay Interlocking,Signal Insulation Failure,HIGH,2.0,2026-10-01 21:00:00
+SMS-DM-2396,Delhi-Mumbai,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 08:00:00
+SMS-DM-2397,Delhi-Mumbai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 23:00:00
+SMS-DM-2398,Delhi-Mumbai,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 07:00:00
+SMS-MC-2399,Mumbai-Chennai,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-06 07:00:00
+SMS-MC-2400,Mumbai-Chennai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 23:00:00
+SMS-DM-2401,Delhi-Mumbai,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 19:00:00
+SMS-DM-2402,Delhi-Mumbai,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 08:00:00
+SMS-DM-2403,Delhi-Mumbai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 11:00:00
+SMS-DM-2404,Delhi-Mumbai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 19:00:00
+SMS-HC-2405,Howrah-Chennai,KOTA,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-06 06:00:00
+SMS-MC-2406,Mumbai-Chennai,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 13:00:00
+SMS-HC-2407,Howrah-Chennai,MMCT,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-02 01:00:00
+SMS-DH-2408,Delhi-Howrah,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 16:00:00
+SMS-DH-2409,Delhi-Howrah,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 17:00:00
+SMS-DH-2410,Delhi-Howrah,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-07 23:00:00
+SMS-MC-2411,Mumbai-Chennai,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 07:00:00
+SMS-HC-2412,Howrah-Chennai,BRC,Axle Counter,Signal Insulation Failure,CRITICAL,2.0,2026-10-05 10:00:00
+SMS-DM-2413,Delhi-Mumbai,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 10:00:00
+SMS-MC-2414,Mumbai-Chennai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 15:00:00
+SMS-DM-2415,Delhi-Mumbai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 06:00:00
+SMS-DH-2416,Delhi-Howrah,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 20:00:00
+SMS-MC-2417,Mumbai-Chennai,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-03 01:00:00
+SMS-DH-2418,Delhi-Howrah,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 08:00:00
+SMS-DM-2419,Delhi-Mumbai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 02:00:00
+SMS-DM-2420,Delhi-Mumbai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 18:00:00
+SMS-DH-2421,Delhi-Howrah,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-07 23:00:00
+SMS-DM-2422,Delhi-Mumbai,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-02 08:00:00
+SMS-DM-2423,Delhi-Mumbai,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 21:00:00
+SMS-HC-2424,Howrah-Chennai,MAS,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-03 06:00:00
+SMS-MC-2425,Mumbai-Chennai,MMCT,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-03 04:00:00
+SMS-HC-2426,Howrah-Chennai,MMCT,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-05 10:00:00
+SMS-DH-2427,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 20:00:00
+SMS-DM-2428,Delhi-Mumbai,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 18:00:00
+SMS-MC-2429,Mumbai-Chennai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-03 09:00:00
+SMS-MC-2430,Mumbai-Chennai,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 17:00:00
+SMS-DM-2431,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 03:00:00
+SMS-HC-2432,Howrah-Chennai,BRC,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-02 05:00:00
+SMS-DM-2433,Delhi-Mumbai,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-05 03:00:00
+SMS-DH-2434,Delhi-Howrah,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 11:00:00
+SMS-DM-2435,Delhi-Mumbai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-06 11:00:00
+SMS-HC-2436,Howrah-Chennai,HWH,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-01 16:00:00
+SMS-MC-2437,Mumbai-Chennai,MMCT,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 16:00:00
+SMS-DM-2438,Delhi-Mumbai,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-06 01:00:00
+SMS-DM-2439,Delhi-Mumbai,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 03:00:00
+SMS-DH-2440,Delhi-Howrah,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 18:00:00
+SMS-DH-2441,Delhi-Howrah,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-04 15:00:00
+SMS-DH-2442,Delhi-Howrah,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 09:00:00
+SMS-HC-2443,Howrah-Chennai,NDLS,Track Circuit,Signal Insulation Failure,HIGH,1.5,2026-10-04 07:00:00
+SMS-DH-2444,Delhi-Howrah,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 11:00:00
+SMS-MC-2445,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-01 14:00:00
+SMS-MC-2446,Mumbai-Chennai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 20:00:00
+SMS-MC-2447,Mumbai-Chennai,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 11:00:00
+SMS-MC-2448,Mumbai-Chennai,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-04 21:00:00
+SMS-HC-2449,Howrah-Chennai,NDLS,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-02 20:00:00
+SMS-DH-2450,Delhi-Howrah,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 08:00:00
+SMS-HC-2451,Howrah-Chennai,KOTA,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-03 09:00:00
+SMS-DH-2452,Delhi-Howrah,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 11:00:00
+SMS-MC-2453,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 21:00:00
+SMS-MC-2454,Mumbai-Chennai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 15:00:00
+SMS-MC-2455,Mumbai-Chennai,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 09:00:00
+SMS-DH-2456,Delhi-Howrah,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-02 14:00:00
+SMS-DH-2457,Delhi-Howrah,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 15:00:00
+SMS-MC-2458,Mumbai-Chennai,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 13:00:00
+SMS-MC-2459,Mumbai-Chennai,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-02 00:00:00
+SMS-HC-2460,Howrah-Chennai,CNB,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-02 17:00:00
+SMS-HC-2461,Howrah-Chennai,CNB,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-05 20:00:00
+SMS-DH-2462,Delhi-Howrah,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-03 11:00:00
+SMS-DH-2463,Delhi-Howrah,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-08 02:00:00
+SMS-DM-2464,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 02:00:00
+SMS-DH-2465,Delhi-Howrah,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 01:00:00
+SMS-DH-2466,Delhi-Howrah,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 23:00:00
+SMS-MC-2467,Mumbai-Chennai,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 22:00:00
+SMS-DH-2468,Delhi-Howrah,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 19:00:00
+SMS-HC-2469,Howrah-Chennai,BRC,Point Machine,Signal Insulation Failure,CRITICAL,2.0,2026-10-06 09:00:00
+SMS-DH-2470,Delhi-Howrah,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 18:00:00
+SMS-MC-2471,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-01 08:00:00
+SMS-HC-2472,Howrah-Chennai,MAS,Point Machine,Signal Insulation Failure,CRITICAL,2.0,2026-10-04 22:00:00
+SMS-MC-2473,Mumbai-Chennai,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 07:00:00
+SMS-MC-2474,Mumbai-Chennai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 08:00:00
+SMS-MC-2475,Mumbai-Chennai,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 05:00:00
+SMS-DH-2476,Delhi-Howrah,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 18:00:00
+SMS-MC-2477,Mumbai-Chennai,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 19:00:00
+SMS-DH-2478,Delhi-Howrah,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 08:00:00
+SMS-DM-2479,Delhi-Mumbai,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 13:00:00
+SMS-HC-2480,Howrah-Chennai,HWH,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-04 02:00:00
+SMS-MC-2481,Mumbai-Chennai,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 15:00:00
+SMS-MC-2482,Mumbai-Chennai,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 07:00:00
+SMS-MC-2483,Mumbai-Chennai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-02 10:00:00
+SMS-MC-2484,Mumbai-Chennai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-04 11:00:00
+SMS-HC-2485,Howrah-Chennai,CNB,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-04 12:00:00
+SMS-HC-2486,Howrah-Chennai,HWH,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-02 15:00:00
+SMS-HC-2487,Howrah-Chennai,NDLS,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-03 09:00:00
+SMS-DH-2488,Delhi-Howrah,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-07 05:00:00
+SMS-DM-2489,Delhi-Mumbai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 16:00:00
+SMS-MC-2490,Mumbai-Chennai,MMCT,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-04 14:00:00
+SMS-MC-2491,Mumbai-Chennai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 08:00:00
+SMS-MC-2492,Mumbai-Chennai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 11:00:00
+SMS-DH-2493,Delhi-Howrah,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 07:00:00
+SMS-HC-2494,Howrah-Chennai,NDLS,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-05 03:00:00
+SMS-DM-2495,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-02 10:00:00
+SMS-DH-2496,Delhi-Howrah,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 08:00:00
+SMS-DH-2497,Delhi-Howrah,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 23:00:00
+SMS-MC-2498,Mumbai-Chennai,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-08 05:00:00
+SMS-DH-2499,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-07 12:00:00
+SMS-MC-2500,Mumbai-Chennai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 16:00:00
+SMS-DM-2501,Delhi-Mumbai,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 21:00:00
+SMS-HC-2502,Howrah-Chennai,BRC,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-06 10:00:00
+SMS-DH-2503,Delhi-Howrah,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 05:00:00
+SMS-HC-2504,Howrah-Chennai,HWH,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-08 02:00:00
+SMS-HC-2505,Howrah-Chennai,NDLS,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-06 10:00:00
+SMS-DM-2506,Delhi-Mumbai,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 05:00:00
+SMS-MC-2507,Mumbai-Chennai,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-04 18:00:00
+SMS-HC-2508,Howrah-Chennai,MMCT,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-07 11:00:00
+SMS-HC-2509,Howrah-Chennai,KOTA,Point Machine,Signal Insulation Failure,CRITICAL,2.0,2026-10-07 09:00:00
+SMS-DH-2510,Delhi-Howrah,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-08 02:00:00
+SMS-MC-2511,Mumbai-Chennai,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-03 02:00:00
+SMS-HC-2512,Howrah-Chennai,MMCT,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-02 16:00:00
+SMS-DH-2513,Delhi-Howrah,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-03 00:00:00
+SMS-DM-2514,Delhi-Mumbai,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-07 00:00:00
+SMS-DH-2515,Delhi-Howrah,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-07 11:00:00
+SMS-MC-2516,Mumbai-Chennai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-04 12:00:00
+SMS-DM-2517,Delhi-Mumbai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 07:00:00
+SMS-DM-2518,Delhi-Mumbai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 10:00:00
+SMS-DM-2519,Delhi-Mumbai,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 09:00:00
+SMS-MC-2520,Mumbai-Chennai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 07:00:00
+SMS-DH-2521,Delhi-Howrah,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 08:00:00
+SMS-MC-2522,Mumbai-Chennai,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 15:00:00
+SMS-HC-2523,Howrah-Chennai,BRC,Axle Counter,Signal Insulation Failure,CRITICAL,1.5,2026-10-06 13:00:00
+SMS-MC-2524,Mumbai-Chennai,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-07 10:00:00
+SMS-DH-2525,Delhi-Howrah,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 06:00:00
+SMS-DM-2526,Delhi-Mumbai,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 03:00:00
+SMS-HC-2527,Howrah-Chennai,NDLS,Relay Interlocking,Signal Insulation Failure,HIGH,2.0,2026-10-06 17:00:00
+SMS-DH-2528,Delhi-Howrah,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 01:00:00
+SMS-DM-2529,Delhi-Mumbai,CNB,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-03 13:00:00
+SMS-MC-2530,Mumbai-Chennai,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 22:00:00
+SMS-HC-2531,Howrah-Chennai,BRC,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-04 21:00:00
+SMS-DM-2532,Delhi-Mumbai,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 21:00:00
+SMS-DH-2533,Delhi-Howrah,KOTA,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-02 02:00:00
+SMS-DM-2534,Delhi-Mumbai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-03 21:00:00
+SMS-DH-2535,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-08 05:00:00
+SMS-DH-2536,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-04 15:00:00
+SMS-HC-2537,Howrah-Chennai,CNB,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-07 15:00:00
+SMS-DM-2538,Delhi-Mumbai,MMCT,Axle Counter,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-02 11:00:00
+SMS-DM-2539,Delhi-Mumbai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 03:00:00
+SMS-DH-2540,Delhi-Howrah,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 23:00:00
+SMS-DH-2541,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 15:00:00
+SMS-HC-2542,Howrah-Chennai,MMCT,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-07 18:00:00
+SMS-MC-2543,Mumbai-Chennai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-02 09:00:00
+SMS-HC-2544,Howrah-Chennai,MMCT,Point Machine,Signal Insulation Failure,CRITICAL,1.5,2026-10-05 19:00:00
+SMS-DM-2545,Delhi-Mumbai,MAS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-05 06:00:00
+SMS-DH-2546,Delhi-Howrah,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 22:00:00
+SMS-DH-2547,Delhi-Howrah,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-08 05:00:00
+SMS-DM-2548,Delhi-Mumbai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-03 12:00:00
+SMS-HC-2549,Howrah-Chennai,KOTA,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-07 08:00:00
+SMS-MC-2550,Mumbai-Chennai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-02 17:00:00
+SMS-DH-2551,Delhi-Howrah,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-01 10:00:00
+SMS-HC-2552,Howrah-Chennai,NDLS,Relay Interlocking,Signal Insulation Failure,HIGH,2.0,2026-10-07 12:00:00
+SMS-HC-2553,Howrah-Chennai,MMCT,Track Circuit,Signal Insulation Failure,HIGH,1.0,2026-10-03 13:00:00
+SMS-MC-2554,Mumbai-Chennai,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-05 05:00:00
+SMS-MC-2555,Mumbai-Chennai,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 00:00:00
+SMS-DH-2556,Delhi-Howrah,MMCT,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 08:00:00
+SMS-HC-2557,Howrah-Chennai,MMCT,Axle Counter,Signal Insulation Failure,CRITICAL,2.0,2026-10-04 05:00:00
+SMS-DH-2558,Delhi-Howrah,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 05:00:00
+SMS-DH-2559,Delhi-Howrah,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 16:00:00
+SMS-HC-2560,Howrah-Chennai,KOTA,Axle Counter,Signal Insulation Failure,CRITICAL,2.0,2026-10-04 12:00:00
+SMS-DH-2561,Delhi-Howrah,CNB,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 09:00:00
+SMS-DH-2562,Delhi-Howrah,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 10:00:00
+SMS-DM-2563,Delhi-Mumbai,NDLS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.5,2026-10-06 06:00:00
+SMS-DH-2564,Delhi-Howrah,KOTA,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-01 23:00:00
+SMS-MC-2565,Mumbai-Chennai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 23:00:00
+SMS-HC-2566,Howrah-Chennai,BRC,Point Machine,Signal Insulation Failure,CRITICAL,1.0,2026-10-01 10:00:00
+SMS-MC-2567,Mumbai-Chennai,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-05 11:00:00
+SMS-MC-2568,Mumbai-Chennai,HWH,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 14:00:00
+SMS-MC-2569,Mumbai-Chennai,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-04 12:00:00
+SMS-DM-2570,Delhi-Mumbai,HWH,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-05 09:00:00
+SMS-DM-2571,Delhi-Mumbai,KOTA,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 00:00:00
+SMS-MC-2572,Mumbai-Chennai,BRC,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-02 04:00:00
+SMS-HC-2573,Howrah-Chennai,MAS,Track Circuit,Signal Insulation Failure,HIGH,2.0,2026-10-07 02:00:00
+SMS-MC-2574,Mumbai-Chennai,MMCT,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-01 19:00:00
+SMS-DM-2575,Delhi-Mumbai,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 19:00:00
+SMS-MC-2576,Mumbai-Chennai,NDLS,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-06 04:00:00
+SMS-MC-2577,Mumbai-Chennai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-06 06:00:00
+SMS-DM-2578,Delhi-Mumbai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-06 03:00:00
+SMS-MC-2579,Mumbai-Chennai,KOTA,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-04 01:00:00
+SMS-MC-2580,Mumbai-Chennai,BRC,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-04 00:00:00
+SMS-DH-2581,Delhi-Howrah,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-07 15:00:00
+SMS-MC-2582,Mumbai-Chennai,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-07 01:00:00
+SMS-DH-2583,Delhi-Howrah,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 04:00:00
+SMS-DH-2584,Delhi-Howrah,HWH,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-04 13:00:00
+SMS-MC-2585,Mumbai-Chennai,CNB,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-03 07:00:00
+SMS-MC-2586,Mumbai-Chennai,HWH,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-06 19:00:00
+SMS-HC-2587,Howrah-Chennai,HWH,Axle Counter,Signal Insulation Failure,CRITICAL,1.0,2026-10-02 19:00:00
+SMS-DH-2588,Delhi-Howrah,MAS,Track Circuit,Mechanical Jam / Glitch,HIGH,1.0,2026-10-04 13:00:00
+SMS-DH-2589,Delhi-Howrah,MMCT,Track Circuit,Mechanical Jam / Glitch,HIGH,1.5,2026-10-01 22:00:00
+SMS-DH-2590,Delhi-Howrah,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-01 08:00:00
+SMS-DH-2591,Delhi-Howrah,NDLS,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-04 03:00:00
+SMS-HC-2592,Howrah-Chennai,CNB,Relay Interlocking,Signal Insulation Failure,HIGH,1.0,2026-10-07 10:00:00
+SMS-MC-2593,Mumbai-Chennai,BRC,Point Machine,Mechanical Jam / Glitch,CRITICAL,1.0,2026-10-07 17:00:00
+SMS-DH-2594,Delhi-Howrah,MAS,Relay Interlocking,Mechanical Jam / Glitch,HIGH,1.0,2026-10-03 11:00:00
+SMS-HC-2595,Howrah-Chennai,CNB,Axle Counter,Signal Insulation Failure,CRITICAL,2.0,2026-10-03 11:00:00
+SMS-HC-2596,Howrah-Chennai,KOTA,Relay Interlocking,Signal Insulation Failure,HIGH,1.5,2026-10-07 09:00:00
+SMS-DM-2597,Delhi-Mumbai,CNB,Relay Interlocking,Mechanical Jam / Glitch,HIGH,2.0,2026-10-02 21:00:00
+SMS-MC-2598,Mumbai-Chennai,BRC,Axle Counter,Mechanical Jam / Glitch,CRITICAL,1.5,2026-10-02 11:00:00
+SMS-MC-2599,Mumbai-Chennai,NDLS,Track Circuit,Mechanical Jam / Glitch,HIGH,2.0,2026-10-07 17:00:00
+SMS-DM-2600,Delhi-Mumbai,MAS,Point Machine,Mechanical Jam / Glitch,CRITICAL,2.0,2026-10-03 04:00:00
