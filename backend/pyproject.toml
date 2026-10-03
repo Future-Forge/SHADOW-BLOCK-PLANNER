@@ -1,5 +1,5 @@
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-
-[tool.ruff]
-line-length = 88
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]

@@ -27,6 +27,8 @@ export interface TacticalSidebarProps {
   onApplyDecision: (decision: BlockDecision) => void;
   activeTab?: 'manual' | 'ai';
   onTabChange?: (tab: 'manual' | 'ai') => void;
+  assistantExpanded?: boolean;
+  onToggleAssistantSize?: () => void;
 }
 
 export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
@@ -46,12 +48,14 @@ export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
   onApplyDecision,
   activeTab: controlledTab,
   onTabChange,
+  assistantExpanded,
+  onToggleAssistantSize,
 }) => {
   const activeTab = controlledTab ?? 'manual';
 
   return (
     <div className="h-full w-full min-h-0 border-r border-[#2C3A35] bg-[#131A17] flex flex-col shadow-2xl">
-      <header className="flex shrink-0 border-b border-[#2C3A35] bg-[#0D1311]">
+      <header className="flex shrink-0 border-b border-[#2C3A35] bg-[#0D1311] pr-14">
         <button
           type="button"
           onClick={() => onTabChange?.('manual')}
@@ -319,8 +323,10 @@ export const TacticalSidebar: React.FC<TacticalSidebarProps> = ({
           </div>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-hidden p-4 flex flex-col">
+        <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
           <AIDispatcherConsole
+            expanded={assistantExpanded}
+            onToggleExpand={onToggleAssistantSize}
             simTime={currentTime}
             onExecuteBlock={onExecuteBlock}
             onFlyTo={onFlyTo}

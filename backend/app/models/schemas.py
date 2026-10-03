@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import time, date
 from typing import Literal, Annotated
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
@@ -47,26 +47,13 @@ class CorridorStation(BaseModel):
     cumulative_km: float = Field(..., description="Chainage from the leg's origin station")
 
 
-class CorridorTelemetry(BaseModel):
-    corridor_id: str = Field(..., description="e.g. 'GQ_WEST', 'GQ_SOUTH_WEST'")
-    path: list[list[float]] = Field(..., description="Array of [lon, lat] coordinates")
-    timestamps: list[float] = Field(..., description="Normalized elapsed animation timestamps (0..1000)")
-    congestion_score: float = Field(..., description="Congestion/density analytical metric driving trail width")
-    status: str = Field("NORMAL", description="'CRITICAL' | 'NORMAL'")
-
-
 class Corridor(BaseModel):
-    corridor_id: Optional[str] = None
     leg_id: str = Field(..., description="e.g. 'WEST', 'SOUTH_WEST', 'EAST_COAST', 'NORTH_EAST'")
     display_name: str
     origin_code: str
     destination_code: str
     total_km: float
     stations: list[CorridorStation]
-    path: Optional[list[list[float]]] = None
-    timestamps: Optional[list[float]] = None
-    congestion_score: Optional[float] = 5.0
-    status: Optional[str] = "NORMAL"
 
 
 class TrainStop(BaseModel):
@@ -110,8 +97,6 @@ class LiveTrainState(BaseModel):
     status: TrainStatus
     corridor_leg: Optional[str] = None
     delay_minutes: float = 0.0
-    heading: Optional[float] = 0.0
-    bearing: Optional[float] = 0.0
 
 
 # --------------------------------------------------------------------------
@@ -301,10 +286,16 @@ class ChatResponse(BaseModel):
 # Gemini AI Dispatcher Console
 # --------------------------------------------------------------------------
 
+class ConversationTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=8000)
+
+
 class DispatcherChatRequest(BaseModel):
-    message: str
+    message: str = Field(min_length=1, max_length=8000)
     session_id: Optional[str] = "default_session"
-    sim_time: Optional[str] = "12:00:00"
+    sim_time: str = Field(default="12:00:00", pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$")
+    history: list[ConversationTurn] = Field(default_factory=list, max_length=12)
 
 
 class FlyToTarget(BaseModel):

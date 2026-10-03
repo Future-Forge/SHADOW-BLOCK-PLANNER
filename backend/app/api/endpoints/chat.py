@@ -12,7 +12,9 @@ from fastapi import APIRouter, Request
 
 from app.api.endpoints.planner import analyze_block
 from app.core.nlp_parser import extract_entities
-from app.core.gemini_agent import process_dispatcher_message
+from app.ai_engine.assistant import process_assistant
+from app.ai_engine.inference import DefectFeatures, model_status, predict
+from app.ai_engine.domain import ThermalFeatures, SafetyFeatures, thermal_risk, safety_checklist
 from app.models.enums import Criticality, TrackLine
 from app.models.schemas import (
     ChatQuery,
@@ -103,17 +105,30 @@ def chat_dispatcher(payload: DispatcherChatRequest, request: Request) -> Dispatc
     Direct conversational interface with the Gemini-powered AI Railway Dispatcher.
     Executes domain function calling against in-memory GQ network, timetable, and solvers.
     """
-    bundle = getattr(request.app.state, "gq_bundle", None)
-    if bundle is None:
-        return DispatcherChatResponse(
-            response_text="⚠️ **SYSTEM BOOT IN PROGRESS**: Golden Quadrilateral network bundle is currently initializing. Please standby.",
-            action_triggered="NONE",
-        )
+    return process_assistant(payload, request)
 
-    return process_dispatcher_message(
-        bundle=bundle,
-        message=payload.message,
-        session_id=payload.session_id or "default_session",
-        sim_time=payload.sim_time or "12:00:00",
-    )
 
+@router.get("/engine")
+def engine_status():
+    return {"engine": "SHADOW_LOCAL_AI_ENGINE", "model": model_status(),
+            "language_mode": "Local domain intent parser (not an LLM)",
+            "capabilities": ["defect_scoring", "thermal_scenarios", "safety_checklists", "timetable_inspection", "block_analysis", "monthly_csv"],
+            "limitations": ["No live weather or physical interlocking connection", "No verified reroute topology", "Source quality metrics are not independently verified"]}
+
+
+@router.post("/predict-criticality")
+def predict_criticality(features: DefectFeatures):
+    from fastapi import HTTPException
+    if not model_status()["available"]:
+        raise HTTPException(503, "Trained model unavailable. No fallback score generated.")
+    return predict(features)
+
+
+@router.post("/thermal-risk")
+def thermal_scenario(features: ThermalFeatures):
+    return thermal_risk(features)
+
+
+@router.post("/safety-checklist")
+def checklist(features: SafetyFeatures):
+    return safety_checklist(features.departments)

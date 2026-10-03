@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Rajdhani", "Segoe UI", sans-serif;
+  --font-sans: "Inter", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", monospace;
 
   /* The Tactical Canvas */

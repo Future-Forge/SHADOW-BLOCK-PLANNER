@@ -12,7 +12,6 @@ import type {
   TrafficPreviewRequest,
   TrafficPreviewResponse,
   BlockResourceData,
-  CorridorTelemetry,
 } from "./types";
 
 function getInitialBaseUrl(): string {
@@ -129,11 +128,25 @@ export const GQ_CORRIDORS: Corridor[] = [
   },
 ];
 
+// Assistant actions have no mock responses and never retry a mutation on another server.
+async function assistantRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await fetch(`${currentBaseUrl}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+    signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(60000)]) : AbortSignal.timeout(60000),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(typeof body.detail === 'string' ? body.detail : `Assistant request failed (${response.status})`);
+  }
+  return response.json() as Promise<T>;
+}
+
 // Helper to make an HTTP request with automatic 127.0.0.1 fallback
 export async function requestApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${currentBaseUrl}${endpoint}`, {
     ...options, headers: { 'Content-Type': 'application/json', ...options?.headers },
-    signal: AbortSignal.timeout(60000),
+    signal: options?.signal ?? AbortSignal.timeout(60000),
   });
   const data = await response.json();
   if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail || data));
@@ -242,17 +255,6 @@ function simulateLiveTrains(simTimeStr: string): LiveTrainState[] {
     const lon = s1.lon + (s2.lon - s1.lon) * segmentProgress;
     const lat = s1.lat + (s2.lat - s1.lat) * segmentProgress;
 
-    // Tactical forward azimuth calculation
-    const dLon = (s2.lon - s1.lon) * (Math.PI / 180);
-    const y = Math.sin(dLon) * Math.cos(s2.lat * (Math.PI / 180));
-    const x =
-      Math.cos(s1.lat * (Math.PI / 180)) * Math.sin(s2.lat * (Math.PI / 180)) -
-      Math.sin(s1.lat * (Math.PI / 180)) * Math.cos(s2.lat * (Math.PI / 180)) * Math.cos(dLon);
-    let bearing = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
-    if (idx % 2 !== 0) {
-      bearing = (bearing + 180) % 360;
-    }
-
     return {
       train_number: t.num,
       train_name: t.name,
@@ -265,13 +267,9 @@ function simulateLiveTrains(simTimeStr: string): LiveTrainState[] {
       status: "RUNNING" as const,
       corridor_leg: t.leg,
       delay_minutes: 0,
-      heading: Math.round(bearing * 10) / 10,
-      bearing: Math.round(bearing * 10) / 10,
     };
   });
 }
-
-
 
 // ═══════════════════════════════════════════════════════════════════════════
 // EXPORTED API CLIENT INTERFACE
@@ -280,27 +278,7 @@ function simulateLiveTrains(simTimeStr: string): LiveTrainState[] {
 export const api = {
   // 1. GET /api/v1/network/gq-corridors
   getCorridors: async (): Promise<Corridor[]> => {
-    try {
-      return await fetchWithFallback<Corridor[]>("/api/v1/network/gq-corridors");
-    } catch {
-      // Offline fallback: Return full Golden Quadrilateral corridors
-      return GQ_CORRIDORS;
-    }
-  },
-
-  // Corridor Telemetry with TripsLayer timestamps and congestion metrics: GET /api/v1/network/corridor-telemetry
-  getCorridorTelemetry: async (): Promise<CorridorTelemetry[]> => {
-    try {
-      return await fetchWithFallback<CorridorTelemetry[]>("/api/v1/network/corridor-telemetry");
-    } catch {
-      return GQ_CORRIDORS.map((c) => ({
-        corridor_id: c.corridor_id || `GQ_${c.leg_id}`,
-        path: c.path || c.stations.map((s) => [s.lon, s.lat] as [number, number]),
-        timestamps: c.timestamps || [0, 250, 500, 750, 1000],
-        congestion_score: c.congestion_score || 7.0,
-        status: (c.status as any) || "NORMAL",
-      }));
-    }
+      return requestApi<Corridor[]>("/api/v1/network/gq-corridors");
   },
 
   // Granular Station List: GET /api/v1/network/stations
@@ -363,9 +341,43 @@ export const api = {
 
   // Chrono-Spatial Traffic Preview: POST /api/v1/planner/preview-traffic
   previewTraffic: async (req: TrafficPreviewRequest): Promise<TrafficPreviewResponse> => {
-    return requestApi<TrafficPreviewResponse>("/api/v1/planner/preview-traffic", {
-      method: "POST", body: JSON.stringify(req),
-    });
+    try {
+      return await fetchWithFallback<TrafficPreviewResponse>("/api/v1/planner/preview-traffic", {
+        method: "POST",
+        body: JSON.stringify(req),
+      });
+    } catch {
+      // Offline simulation fallback
+      return {
+        from_station: req.from_station,
+        to_station: req.to_station,
+        track_line: req.track_line || "UP",
+        requested_time: req.requested_time,
+        duration_minutes: req.duration_minutes,
+        projected_traffic_count: 2,
+        summary_by_category: { PREMIUM: 1, SUPERFAST: 1 },
+        trains: [
+          {
+            train_number: "12953",
+            train_name: "August Kranti Rajdhani",
+            category: "PREMIUM",
+            scheduled_pass_time: req.requested_time,
+            direction: req.track_line || "UP",
+            conflict: true,
+            delay_minutes: 0,
+          },
+          {
+            train_number: "20901",
+            train_name: "Vande Bharat Express",
+            category: "SUPERFAST",
+            scheduled_pass_time: req.requested_time,
+            direction: req.track_line || "UP",
+            conflict: true,
+            delay_minutes: 0,
+          },
+        ],
+      };
+    }
   },
 
   // Single corridor details
@@ -393,6 +405,7 @@ export const api = {
         method: "POST",
         body: JSON.stringify(request),
       });
+
   },
 
   getBlockResources: async (params: {
@@ -515,12 +528,16 @@ export const api = {
   },
 
   // AI Dispatcher Chat (Autonomous Section Controller & AI Chief Dispatcher)
-  chatDispatcher: async (req: DispatcherChatRequest): Promise<DispatcherChatResponse> => {
-      return await requestApi<DispatcherChatResponse>("/api/v1/chat/dispatcher", {
+  chatDispatcher: async (req: DispatcherChatRequest, signal?: AbortSignal): Promise<DispatcherChatResponse> => {
+      return await assistantRequest<DispatcherChatResponse>("/api/v1/chat/dispatcher", {
         method: "POST",
         body: JSON.stringify(req),
+        signal,
       });
   },
+
+  assistantStatus: (signal?: AbortSignal) => assistantRequest<{ engine: string; model: { available: boolean; name: string; trees?: number; sha256?: string }; language_mode: string; capabilities: string[]; limitations: string[] }>("/api/v1/chat/engine", { signal }),
+  commitAssistantBlock: (req: BlockRequest, signal?: AbortSignal) => assistantRequest<{ committed: boolean; block_id: string; decision: BlockDecision }>("/api/v1/planner/commit-block", { method: "POST", body: JSON.stringify(req), signal }),
 
   // Health check
   health: async (): Promise<HealthResponse> => {

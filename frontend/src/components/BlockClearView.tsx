@@ -16,6 +16,8 @@ const actionLabels = { HOLD: 'Stopped', LOOP: 'Loop hold', CAUTION: 'Restricted 
 export function BlockClearView({ block, corridors, stations, onBack, onClose }: Props) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
   const [query, setQuery] = useState('');
   const [selectedNumber, setSelectedNumber] = useState(block.decision.affected_trains[0]?.train_number ?? '');
   const affected = block.decision.affected_trains;
@@ -41,8 +43,10 @@ export function BlockClearView({ block, corridors, stations, onBack, onClose }: 
 
   useEffect(() => {
     const panel = panelRef.current;
+    const previous = document.activeElement as HTMLElement | null;
     panel?.focus();
     const trapFocus = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.stopPropagation(); closeRef.current(); return; }
       if (event.key !== 'Tab' || !panel) return;
       const elements = [...panel.querySelectorAll<HTMLElement>('button, input, [tabindex="0"]')];
       const first = elements[0];
@@ -54,7 +58,7 @@ export function BlockClearView({ block, corridors, stations, onBack, onClose }: 
       }
     };
     panel?.addEventListener('keydown', trapFocus);
-    return () => panel?.removeEventListener('keydown', trapFocus);
+    return () => { panel?.removeEventListener('keydown', trapFocus); previous?.focus(); };
   }, []);
 
   return (

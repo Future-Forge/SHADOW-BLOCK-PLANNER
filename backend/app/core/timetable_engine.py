@@ -200,3 +200,85 @@ class TimetableEngine:
         from app.core.sector_occupancy import sector_conflicts
         return sector_conflicts(self, track_line, from_code, to_code, window_start_min,
                                 window_end_min, corridor_km_map, operation_date)
+
+    def _legacy_sector_query(self, leg_id, track_line, from_code, to_code,
+                             window_start_min, window_end_min, corridor_km_map):
+        """
+        Finds all trains scheduled to traverse the micro-segment or span [from_code, to_code]
+        during [window_start_min, window_end_min].
+
+        Accurately calculates passage window and scheduled passing time using
+        either exact scheduled stops or along-corridor spatio-temporal interpolation.
+        """
+        km_from = corridor_km_map.get(from_code)
+        km_to = corridor_km_map.get(to_code)
+        if km_from is None or km_to is None:
+            return []
+
+        s_min = min(km_from, km_to)
+        s_max = max(km_from, km_to)
+        req_line = TrackLine.UP if km_from < km_to else TrackLine.DOWN
+        target_line = track_line or req_line
+
+        conflicts: list[SectorConflict] = []
+        seen_trains: set[str] = set()
+
+        for train in self.trains.values():
+            if train.number in seen_trains:
+                continue
+
+            route = train.route
+            for a, b in zip(route, route[1:]):
+                if a.station_code in corridor_km_map and b.station_code in corridor_km_map:
+                    k_a = corridor_km_map[a.station_code]
+                    k_b = corridor_km_map[b.station_code]
+                    if k_a == k_b:
+                        continue
+
+                    hop_line = TrackLine.UP if k_a < k_b else TrackLine.DOWN
+                    if target_line and hop_line != target_line:
+                        continue
+
+                    h_min = min(k_a, k_b)
+                    h_max = max(k_a, k_b)
+
+                    # Check if train hop overlaps the blocked sector on corridor chainage
+                    if max(h_min, s_min) < min(h_max, s_max):
+                        t1 = a.departure or a.arrival
+                        t2 = b.arrival or b.departure
+                        if not t1 or not t2:
+                            continue
+
+                        m1 = time_to_minutes(t1) + (a.day - 1) * 1440
+                        m2 = time_to_minutes(t2) + (b.day - 1) * 1440
+                        if m2 < m1:
+                            m2 += 1440
+
+                        # Calculate passage time across the sector
+                        f_entry = (km_from - k_a) / (k_b - k_a)
+                        f_exit = (km_to - k_a) / (k_b - k_a)
+                        t_entry = m1 + f_entry * (m2 - m1)
+                        t_exit = m1 + f_exit * (m2 - m1)
+
+                        pass_start = min(t_entry, t_exit) % 1440
+                        pass_end = max(t_entry, t_exit) % 1440
+
+                        # Check if passage window intersects requested window
+                        if pass_start <= window_end_min and pass_end >= window_start_min:
+                            seen_trains.add(train.number)
+                            conflicts.append(
+                                SectorConflict(
+                                    train_number=train.number,
+                                    train_name=train.name,
+                                    category=train.category,
+                                    scheduled_pass_time=minutes_to_time(int(t_entry) % 1440),
+                                    pass_entry_min=int(t_entry),
+                                    pass_exit_min=int(t_exit),
+                                    direction=hop_line,
+                                    bounding_stops=(a.station_code, b.station_code),
+                                )
+                            )
+                            break
+
+        conflicts.sort(key=lambda c: c.pass_entry_min)
+        return conflicts

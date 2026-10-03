@@ -160,11 +160,14 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
     }));
   };
 
-  const formatCountdown = (committedAt: string, durationMinutes: number) => {
-    const startMs = new Date(committedAt).getTime();
-    const durationMs = (durationMinutes || 60) * 60 * 1000;
+  const formatCountdown = (block: ActiveBlock) => {
+    const plannedStart = block.decision.planning?.start_iso || (block.request.operation_date
+      ? `${block.request.operation_date}T${block.decision.block_window.start}` : block.committedAt);
+    const startMs = new Date(plannedStart).getTime();
+    const durationMs = block.request.duration_minutes * 60 * 1000;
     const endMs = startMs + durationMs;
-    const diffSec = Math.max(0, Math.floor((endMs - currentTimeMs) / 1000));
+    const isScheduled = currentTimeMs < startMs;
+    const diffSec = Math.max(0, Math.floor(((isScheduled ? startMs : endMs) - currentTimeMs) / 1000));
 
     const hours = Math.floor(diffSec / 3600)
       .toString()
@@ -178,6 +181,7 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
       formatted: `${hours}:${mins}:${secs}`,
       isExpired: diffSec === 0,
       totalSeconds: diffSec,
+      isScheduled,
     };
   };
 
@@ -273,10 +277,7 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
                 </div>
               ) : (
                 activeBlocks.map((block) => {
-                  const countdown = formatCountdown(
-                    block.committedAt,
-                    block.request.duration_minutes
-                  );
+                  const countdown = formatCountdown(block);
                   const isExpanded = !collapsedBlockIds[block.id];
                   const affectedTrains = block.decision?.affected_trains || [];
                   const resourceData = resourceDataByBlockId[block.id];
@@ -296,7 +297,12 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
                       {/* Top Row: Location & Criticality */}
                       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#2C3A35]/70 pb-3">
                         <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                          <button type="button" onClick={() => setClearViewBlockId(block.id)}
+                            className="flex items-center gap-1.5 rounded-lg border border-emerald-300/50 bg-emerald-300/10 px-3 py-1.5 text-[11px] font-mono text-emerald-200 hover:bg-emerald-300/20">
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span>CLEAR BLOCK VIEW</span>
+                          </button>
                             <span
                               className={`rounded-md border px-2 py-0.5 font-mono text-[10px] font-bold tracking-widest uppercase ${getCriticalityBadge(
                                 block.request.criticality
@@ -332,11 +338,11 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
                                 : 'border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399] shadow-[0_0_12px_rgba(52,211,153,0.15)]'
                             }`}
                           >
-                            <Clock className="h-3.5 w-3.5 text-[#34D399] animate-spin" style={{ animationDuration: '6s' }} />
+                            <Clock className="h-3.5 w-3.5 text-[#34D399]" />
                             <span>
                               {countdown.isExpired
-                                ? 'EXPIRED'
-                                : `Time Remaining: ${countdown.formatted}`}
+                                ? 'SCHEDULED WINDOW ELAPSED'
+                                : `${countdown.isScheduled ? 'Starts in' : 'Window ends in'}: ${countdown.formatted} (wall clock)`}
                             </span>
                           </div>
                           <span className="text-[10px] text-[#E2EAF4]/50 font-mono">
@@ -371,12 +377,7 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2">
-                          <button type="button" onClick={() => setClearViewBlockId(block.id)}
-                            className="flex items-center gap-1.5 rounded-lg border border-emerald-300/50 bg-emerald-300/10 px-3 py-1.5 text-[11px] font-mono text-emerald-200 hover:bg-emerald-300/20">
-                            <MapPin className="h-3.5 w-3.5" />
-                            <span>CLEAR BLOCK VIEW</span>
-                          </button>
+                        <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handleLocate(block)}
@@ -663,7 +664,7 @@ export const ActiveBlocksModal: React.FC<ActiveBlocksModalProps> = ({
                                       onClick={() => setAllocatedBlockIds((prev) => ({ ...prev, [block.id]: true }))}
                                       className="rounded bg-[#A7F3D0] px-2.5 py-1 text-[9px] font-mono font-bold uppercase text-[#0D1311] shadow-[0_0_10px_rgba(167,243,208,0.25)] hover:bg-[#34D399] disabled:cursor-not-allowed disabled:bg-[#2C3A35] disabled:text-[#E2EAF4]/40"
                                     >
-                                      {allocatedBlockIds[block.id] ? 'ALLOCATED' : 'ALLOCATE'}
+                                      {allocatedBlockIds[block.id] ? 'CHECKLIST REVIEWED' : 'REVIEW CHECKLIST'}
                                     </button>
                                   </div>
                                 </>

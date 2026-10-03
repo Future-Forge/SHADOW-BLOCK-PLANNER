@@ -76,3 +76,70 @@ Shadow-Blockplanner AI & Data Platform
 - **Pytest Results:** **9/9 Tests Passed (100%)**
   - `tests/test_safety_and_nlp.py`: 5/5 Passed
   - `tests/test_stress_benchmarks.py`: 4/4 Passed
+
+---
+
+## 2026-10-03 Update: Planner Application Integration
+
+This entry records the latest planner application changes. All earlier handoff
+content above is retained as historical context. The integration described here
+runs in `backend/app` and does not replace the standalone `ai_engine/main.py`
+PostgreSQL/Redis service. Earlier production-readiness and latency claims have
+not been independently reverified for this application integration.
+
+### AI inference and assistant workflow
+
+- Added `backend/app/ai_engine/inference.py`, `domain.py`, and `assistant.py`,
+  plus the supplied `models/defect_criticality_xgb.json` artifact. The application
+  loads the actual 150-tree XGBoost regressor; it does not train on startup or
+  fabricate fallback scores. Backend dependencies now include XGBoost 3.1.3
+  and NumPy 2.x.
+- Defect scoring requires age, ambient temperature, tonnage, speed restriction,
+  and department. Missing measurements trigger clarification; invalid inputs
+  are rejected and values outside the companion training ranges are flagged.
+- Added thermal scenario calculations and department-specific safety checklists.
+  These use supplied model assumptions, not live weather observations or
+  verified railway permissions. Risk scores are not calibrated probabilities.
+- Added `GET /api/v1/chat/engine` and POST endpoints
+  `/api/v1/chat/predict-criticality`, `/api/v1/chat/thermal-risk`, and
+  `/api/v1/chat/safety-checklist`. The dispatcher accepts up to 12 conversation
+  turns and validates simulation time.
+- Dispatcher planning requests require explicit section, department, priority,
+  duration, and start time. Analysis uses the existing planner; saving requires
+  an explicit user action. Rerouting, rescheduling, and overrun requests explain
+  unsupported execution capabilities and require controller review.
+- Reworked the assistant UI with structured results, source disclosures,
+  model status, session history, retryable connection states, and an expandable
+  panel. Detailed integration notes are in
+  [`docs/AI_ENGINE_INTEGRATION.md`](../docs/AI_ENGINE_INTEGRATION.md).
+
+### Map, workspace, and timetable updates
+
+- Updated the main workspace and map styling, block inspection, planning lab,
+  active-block dialog, sidebar, and simulation state handling.
+- Added `/api/v1/trains/snapshot`, including simulation-source labeling,
+  corridor counts, and a complete corridor-filtered train list without a
+  display-count cap.
+- Added map camera fitting and block-path presentation helpers, train-marker
+  grouping, dialog focus handling, and a map error boundary.
+- The current application schema no longer exposes the former corridor
+  telemetry routes/fields. Frontend API contracts were updated with the map
+  implementation. Existing planning and operation-storage modules are retained.
+
+### Verification on 2026-10-03
+
+- Backend: `python -m pytest backend/tests -q` with `PYTHONPATH=backend`:
+  **36 passed, 10 failed** out of 46 tests. Failures are in the existing
+  `backend/tests/test_gemini_agent.py` suite, whose expected dispatcher behavior
+  differs from the replacement assistant. They cover live-train and delay
+  queries, incomplete block/emergency commands, train telemetry, resequencing,
+  station/corridor information, and MILP explanations. These compatibility
+  failures remain unresolved; this update does not claim a green backend suite.
+- Frontend: `npm run test`: **16 passed** (camera fitting and map presentation).
+- Frontend: `npm run build`: **passed**, with a bundle-size warning. Frontend
+  checks ran against the local application source copied into this checkout,
+  using its installed dependencies.
+- Preserved the repository's existing CI workflows and intact documentation;
+  older local copies included null-filled files and disabled test steps.
+- Virtual environments, installed packages, local secrets, backups, generated
+  build output, and runtime SQLite files are excluded from the commit.

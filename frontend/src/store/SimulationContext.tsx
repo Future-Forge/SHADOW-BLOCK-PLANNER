@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import type { ActiveBlock, BlockDecision, BlockRequest, Corridor, StationItem, CorridorLeg } from "../api/types";
-import { api } from "../api/api";
+import { api, GQ_CORRIDORS } from "../api/api";
 import { planningFetch } from "../api/planning";
 import type { Operation } from "../api/planning";
 import type { ColorBlindnessMode } from "../lib/accessibility";
@@ -218,7 +218,7 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsLoadingStations(true);
     try {
       const [corridorData, groupedStations, flatStations] = await Promise.all([
-        api.getCorridors().catch(() => [] as Corridor[]),
+        api.getCorridors(),
         api.getStationsByCorridor().catch(() => null),
         api.getStations().catch(() => [] as StationItem[]),
       ]);
@@ -266,6 +266,7 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (err: any) {
       console.warn("Failed to load corridors from backend, falling back to full GQ dataset:", err);
       setStationsError(err.message || "Failed to load corridors");
+      setCorridors(GQ_CORRIDORS);
       setGlobalStationList(INITIAL_GQ_STATIONS);
       setStations(INITIAL_GQ_STATIONS);
     } finally {
@@ -277,17 +278,18 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     loadCorridors();
   }, [loadCorridors]);
 
-  // Real-time Operator Clock: Ticks every second in HH:MM:SS
+  // Simulation playback must respect pause, scrub and the selected speed.
   useEffect(() => {
-    const updateRealTimeClock = () => {
-      setCurrentTime(format(new Date(), "HH:mm:ss"));
-    };
-
-    updateRealTimeClock();
-    const intervalId = setInterval(updateRealTimeClock, 1000);
+    if (!isPlaying) return;
+    const intervalId = setInterval(() => setCurrentTime(value => {
+      const [h, m, s] = value.split(':').map(Number);
+      const next = (h * 3600 + m * 60 + s + speedMultiplier) % 86400;
+      return [Math.floor(next / 3600), Math.floor(next / 60) % 60, next % 60]
+        .map(n => String(n).padStart(2, '0')).join(':');
+    }), 1000);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [isPlaying, speedMultiplier]);
 
   const togglePlay = () => setIsPlaying((prev) => !prev);
 

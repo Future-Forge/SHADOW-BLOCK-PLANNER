@@ -26,11 +26,11 @@ function Metrics({ value }: { value: Evaluation }) {
   </div>;
 }
 
-export function PlanningLab({ initialRequest, initialDecision, onClose }: {
-  initialRequest: BlockRequest; initialDecision?: BlockDecision | null; onClose: () => void;
+export function PlanningLab({ initialRequest, initialDecision, initialTab = 'plan', onClose }: {
+  initialRequest: BlockRequest; initialDecision?: BlockDecision | null; initialTab?: 'plan' | 'history'; onClose: () => void;
 }) {
   const { corridors, refreshOperations } = useSimulation();
-  const [tab, setTab] = useState<'plan' | 'history'>('plan');
+  const [tab, setTab] = useState<'plan' | 'history'>(initialTab);
   const [request, setRequest] = useState<BlockRequest>({ ...initialRequest, operation_date: initialRequest.operation_date || today(),
     resource_capacity: initialRequest.resource_capacity || capacities, weather: initialRequest.weather || { mode: 'seasonal', exposed_work: false } });
   const [decision, setDecision] = useState(initialDecision || null);
@@ -88,7 +88,7 @@ export function PlanningLab({ initialRequest, initialDecision, onClose }: {
     await refreshOperations();
   });
 
-  return <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm">
+  return <div className="planning-lab fixed inset-0 z-[150] flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm">
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="planning-title" className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-600 bg-[#0d1714] text-slate-100 shadow-2xl">
       <header className="flex items-start justify-between gap-3 border-b border-slate-700 p-5">
         <div><div className="text-xs uppercase tracking-[.2em] text-emerald-400">Shadow Block · Planning simulation</div><h2 id="planning-title" className="mt-1 text-xl font-semibold">Planning Lab</h2><p className="mt-1 text-sm text-slate-400">Shared windows, weather-aware work, and an auditable operation history.</p></div>

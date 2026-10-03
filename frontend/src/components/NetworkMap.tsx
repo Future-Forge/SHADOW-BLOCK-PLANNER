@@ -1,662 +1,197 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Map from 'react-map-gl/maplibre';
 import { DeckGL } from '@deck.gl/react';
-import { PathLayer, ScatterplotLayer, LineLayer, ColumnLayer, IconLayer, TextLayer } from '@deck.gl/layers';
+import { PathLayer, ScatterplotLayer, IconLayer, TextLayer, ColumnLayer } from '@deck.gl/layers';
 import { FlyToInterpolator, WebMercatorViewport } from '@deck.gl/core';
+import { Focus, Layers3, Minus, Plus } from 'lucide-react';
+import { useReducedMotion } from 'framer-motion';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import type { ActiveBlock, Corridor, LiveTrainState } from '../api/types';
+import type { ActiveBlock, LiveTrainState } from '../api/types';
 import { useSimulation } from '../store/SimulationContext';
-import { getMapColor, type ColorBlindnessMode } from '../lib/accessibility';
-import { Navigation } from 'lucide-react';
+import { boundsForCoordinates, clusterTrains, getBlockPath, TRAIN_ICON } from '../lib/mapPresentation';
+import type { Coordinate, TrainCluster } from "../lib/mapPresentation";
+import { fitCinematicBounds } from "../lib/mapCamera";
 
-// WebGL blend equation additive (GL.FUNC_ADD = 0x8006 / 32774)
-const GL = {
-  FUNC_ADD: 32774,
-};
-import {
-  TACTICAL_CHEVRON_SVG,
-  TACTICAL_ICON_MAPPING,
-  getTacticalTrainColor,
-} from '../lib/tacticalSymbology';
+export interface MapViewState { longitude: number; latitude: number; zoom: number; pitch: number; bearing: number; transitionDuration?: number; transitionInterpolator?: FlyToInterpolator }
+const INITIAL: MapViewState = { longitude: 79, latitude: 22, zoom: 4.3,   pitch: 42,
+  bearing: -12, };
+const GOLD: [number, number, number, number] = [232, 190, 112, 255];
+const CYAN: [number, number, number, number] = [113, 219, 246, 255];
+const CORAL: [number, number, number, number] = [255, 124, 110, 255];
+const HUBS: Record<string, string> = { NDLS: 'NEW DELHI', BCT: 'MUMBAI', MAS: 'CHENNAI', HWH: 'KOLKATA' };
 
-export interface MapViewState {
-  longitude: number;
-  latitude: number;
-  zoom: number;
-  pitch: number;
-  bearing: number;
-  minZoom?: number;
-  maxZoom?: number;
-  transitionDuration?: number;
-  transitionInterpolator?: any;
-}
-
-const INITIAL_VIEW_STATE: MapViewState = {
-  longitude: 79.0,
-  latitude: 22.0,
-  zoom: 4.2,
-  pitch: 55,
-  bearing: -12,
-  minZoom: 3,
-  maxZoom: 16,
-};
-
-function findCorridorForBlock(corridors: Corridor[], block: ActiveBlock) {
-  return corridors.find(
-    (corridor) =>
-      corridor.stations.some((station) => station.code === block.request.from_station) &&
-      corridor.stations.some((station) => station.code === block.request.to_station),
-  );
-}
-
-function getAction(train: LiveTrainState, blocks: ActiveBlock[]) {
-  for (const block of blocks) {
-    const affected = block.decision.affected_trains.find((item) => item.train_number === train.train_number);
-    if (affected) return affected.action;
-  }
-  return 'NONE' as const;
-}
-
-function buildTrail(train: LiveTrainState) {
-  const tail: [number, number][] = [];
-  const drift = 0.02 + (train.speed_kmph / 2500);
-
-  for (let i = 0; i < 6; i += 1) {
-    const offset = drift * (i + 1);
-    const direction = train.track_line === 'UP' ? -1 : 1;
-    tail.push([train.lon + offset * direction * 0.8, train.lat - offset * (i % 2 === 0 ? 0.6 : 0.9)]);
-  }
-
-  return tail;
-}
-
-// Generates 3D extruded tactical pillars along the active block segment with accessibility color mapping
-function create3DBlockPillars(block: ActiveBlock, corridors: Corridor[], colorMode: ColorBlindnessMode = 'standard') {
-  const baseColor = getMapColor(block.request.criticality, colorMode);
-  const pillars: Array<{
-    blockId: string;
-    position: [number, number];
-    elevation: number;
-    color: [number, number, number, number];
-    criticality: string;
-  }> = [];
-
-  // Determine path points: prefer geo-accurate LineString block_geometry from backend
-  let pathPoints: [number, number][] = [];
-  if (block.decision.block_geometry && block.decision.block_geometry.length >= 2) {
-    pathPoints = block.decision.block_geometry as [number, number][];
-  } else {
-    const corridor = findCorridorForBlock(corridors, block);
-    if (corridor) {
-      const fromIdx = corridor.stations.findIndex((s) => s.code === block.request.from_station);
-      const toIdx = corridor.stations.findIndex((s) => s.code === block.request.to_station);
-      if (fromIdx !== -1 && toIdx !== -1) {
-        const lo = Math.min(fromIdx, toIdx);
-        const hi = Math.max(fromIdx, toIdx);
-        const slice = corridor.stations.slice(lo, hi + 1);
-        pathPoints = (fromIdx <= toIdx ? slice : [...slice].reverse()).map((s) => [s.lon, s.lat] as [number, number]);
-      }
-    }
-  }
-
-  if (pathPoints.length < 2) {
-    const corridor = findCorridorForBlock(corridors, block);
-    const stationFrom = corridor?.stations.find((s) => s.code === block.request.from_station);
-    const stationTo = corridor?.stations.find((s) => s.code === block.request.to_station);
-    if (stationFrom && stationTo) {
-      pathPoints = [
-        [stationFrom.lon, stationFrom.lat],
-        [stationTo.lon, stationTo.lat],
-      ];
-    } else {
-      return [];
-    }
-  }
-
-  // Smoothly sample along physical polyline
-  const steps = Math.max(18, pathPoints.length * 2);
-  for (let i = 0; i <= steps; i += 1) {
-    const t = i / steps;
-    const exactIdx = t * (pathPoints.length - 1);
-    const lowIdx = Math.floor(exactIdx);
-    const highIdx = Math.min(lowIdx + 1, pathPoints.length - 1);
-    const subFrac = exactIdx - lowIdx;
-
-    const pLow = pathPoints[lowIdx];
-    const pHigh = pathPoints[highIdx];
-    const x = pLow[0] + (pHigh[0] - pLow[0]) * subFrac;
-    const y = pLow[1] + (pHigh[1] - pLow[1]) * subFrac;
-
-    // Arching 3D elevation from 2,500m to 6,500m
-    const elevation = 2500 + Math.sin(t * Math.PI) * 4000;
-
-    pillars.push({
-      blockId: block.id,
-      position: [x, y],
-      elevation,
-      color: [...baseColor, 210],
-      criticality: block.request.criticality,
-    });
-  }
-
-  return pillars;
-}
-
-// Generates highlighted 3D block route line with accessibility color mapping
-function createBlockLines(blocks: ActiveBlock[], corridors: Corridor[], colorMode: ColorBlindnessMode = 'standard') {
-  const lines: Array<{ path: [number, number][]; color: [number, number, number, number] }> = [];
-
-  blocks.forEach((block) => {
-    const baseColor = getMapColor(block.request.criticality, colorMode);
-
-    // If geo-accurate block_geometry is present from backend, use it directly!
-    if (block.decision.block_geometry && block.decision.block_geometry.length >= 2) {
-      lines.push({
-        path: block.decision.block_geometry as [number, number][],
-        color: [...baseColor, 250],
-      });
-      return;
-    }
-
-    // Fallback: slice stations from corridor or connect endpoints
-    const corridor = findCorridorForBlock(corridors, block);
-    if (!corridor) return;
-
-    const fromIdx = corridor.stations.findIndex((s) => s.code === block.request.from_station);
-    const toIdx = corridor.stations.findIndex((s) => s.code === block.request.to_station);
-    if (fromIdx !== -1 && toIdx !== -1) {
-      const lo = Math.min(fromIdx, toIdx);
-      const hi = Math.max(fromIdx, toIdx);
-      const slice = corridor.stations.slice(lo, hi + 1);
-      const subpath = (fromIdx <= toIdx ? slice : [...slice].reverse()).map((s) => [s.lon, s.lat] as [number, number]);
-      lines.push({
-        path: subpath,
-        color: [...baseColor, 250],
-      });
-      return;
-    }
-
-    const fromStation = corridor.stations.find((s) => s.code === block.request.from_station);
-    const toStation = corridor.stations.find((s) => s.code === block.request.to_station);
-    if (!fromStation || !toStation) return;
-
-    lines.push({
-      path: [
-        [fromStation.lon, fromStation.lat],
-        [toStation.lon, toStation.lat],
-      ],
-      color: [...baseColor, 250],
-    });
-  });
-
-  return lines;
-}
-
-export const NetworkMap = ({
-  trains,
-  onBlockClick,
-}: {
-  trains: LiveTrainState[];
-  onBlockClick?: (block: ActiveBlock) => void;
-}) => {
-  const { activeBlocks, setPrefillStation, cameraTarget, corridors, colorMode, highPerformanceVfx } = useSimulation();
-  const [viewState, setViewState] = useState<MapViewState>(INITIAL_VIEW_STATE);
-  const [hoverInfo, setHoverInfo] = useState<{ object: any; x: number; y: number } | null>(null);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-
-  // Live 3D "Stand Up" elevationScale animation state (0 -> 1 over 1500ms)
-  const [animatedElevationScale, setAnimatedElevationScale] = useState(1);
-  const prevBlockCountRef = useRef(activeBlocks.length);
+export function NetworkMap({ trains, onBlockClick, onTrainClick, selectedTrainId, selectedBlockId,
+  focusCorridor,
+  detailPanelOpen = false, showStations = true, showTrains = true, showBlocks = true, onStationClick }: {
+  trains: LiveTrainState[]; onBlockClick?: (block: ActiveBlock) => void;
+  onTrainClick?: (train: LiveTrainState) => void; selectedTrainId?: string | null;
+  selectedBlockId?: string | null;   focusCorridor?: string;
+  detailPanelOpen?: boolean; showStations?: boolean;
+  showTrains?: boolean; showBlocks?: boolean; onStationClick?: (code: string) => void;
+}) {
+  const { activeBlocks, cameraTarget, corridors, highPerformanceVfx, colorMode } = useSimulation();
+  const reduced = useReducedMotion();
+  const container = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
+  const [size, setSize] = useState({ width: 900, height: 650 });
+  const [view, setView] = useState<MapViewState>(INITIAL);
+  const [mapError, setMapError] = useState(false);
+  const [hover, setHover] = useState<{ text: string; x: number; y: number } | null>(null);
+  const coral: [number, number, number, number] = colorMode === 'standard' ? CORAL : [186, 160, 255, 255];
+  const transition = reduced || !highPerformanceVfx ? 0 : 1100;
 
   useEffect(() => {
-    // When a block is added (or updated), trigger the 1500ms physical rise transition
-    if (activeBlocks.length > 0 && activeBlocks.length !== prevBlockCountRef.current) {
-      setAnimatedElevationScale(0);
-      const startTime = performance.now();
-      const duration = 1500;
+    if (!container.current) return;
+    const observer = new ResizeObserver(([entry]) => setSize({ width: entry.contentRect.width, height: entry.contentRect.height }));
+    observer.observe(container.current);
+    return () => observer.disconnect();
+  }, []);
 
-      let rafId: number;
-      const animateStep = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(1, elapsed / duration);
-        // Cubic ease-out: 1 - (1 - t)^3
-        const eased = 1 - Math.pow(1 - progress, 3);
-        setAnimatedElevationScale(eased);
+  const fit = useCallback((points: Coordinate[], pitch = 42) => {
+    if (!boundsForCoordinates(points) || size.width < 10 || size.height < 10) return;
+    const fitted = fitCinematicBounds(points, size.width, size.height, {
+      top: Math.min(150, size.height * .23), bottom: Math.min(110, size.height * .20),
+      left: Math.min(125, size.width * .16),
+      right: detailPanelOpen && size.width > 700 ? Math.min(415, size.width * .38) : Math.min(120, size.width * .16)
+    }, pitch, pitch ? -12 : 0);
+    if (fitted) setView({...fitted, transitionDuration: transition, transitionInterpolator: new FlyToInterpolator()});
+  }, [size, transition, detailPanelOpen]);
 
-        if (progress < 1) {
-          rafId = requestAnimationFrame(animateStep);
-        }
-      };
+  const networkPoints = useMemo(() => corridors.flatMap(c => c.stations.map(s => [s.lon, s.lat] as Coordinate)), [corridors]);
+  useEffect(() => {
+    if (networkPoints.length && !initialized.current) { fit(networkPoints); initialized.current = true; }
+  }, [networkPoints, fit]);
 
-      rafId = requestAnimationFrame(animateStep);
-      return () => cancelAnimationFrame(rafId);
-    }
-    prevBlockCountRef.current = activeBlocks.length;
-  }, [activeBlocks.length]);
-
-  // React smoothly to camera navigation targets (e.g. from combobox or cinematic FlyTo)
   useEffect(() => {
     if (!cameraTarget) return;
+    if (cameraTarget.bounds) { fit(cameraTarget.bounds, cameraTarget.pitch ?? 35); return; }
+    setView(previous => ({ ...previous, longitude: cameraTarget.lon, latitude: cameraTarget.lat,
+      zoom: cameraTarget.zoom ?? 8, pitch: cameraTarget.pitch ?? 25, bearing: cameraTarget.bearing ?? 0,
+      transitionDuration: transition, transitionInterpolator: new FlyToInterpolator() }));
+  }, [cameraTarget, fit, transition]);
 
-    const container = mapContainerRef.current;
-    if (cameraTarget.bounds && container) {
-      const { width, height } = container.getBoundingClientRect();
-      const fitted = new WebMercatorViewport({ width, height, ...viewState }).fitBounds(cameraTarget.bounds, {
-        padding: { top: 150, bottom: 150, left: 500, right: 400 },
-        maxZoom: 14,
-      });
-      setViewState((prev) => ({
-        ...prev,
-        ...fitted,
-        pitch: cameraTarget.pitch ?? 60,
-        bearing: cameraTarget.bearing ?? -15,
-        transitionDuration: cameraTarget.transitionDuration ?? 2000,
-        transitionInterpolator: new FlyToInterpolator({ speed: 1.2 }),
-      }));
-      return;
-    }
-
-    setViewState((prev) => ({
-      ...prev,
-      longitude: cameraTarget.lon,
-      latitude: cameraTarget.lat,
-      zoom: cameraTarget.zoom ?? 11,
-      pitch: cameraTarget.pitch ?? 60,
-      bearing: cameraTarget.bearing ?? -12,
-      transitionDuration: cameraTarget.transitionDuration ?? 2000,
-      transitionInterpolator: new FlyToInterpolator({ speed: 1.2 }),
-    }));
-  }, [cameraTarget]);
-
-  // Corridor Telemetry dataset for Base Track (PathLayer) & Animated Telemetry Flow (TripsLayer)
-  const corridorData = useMemo(() => {
-    return corridors.map((corridor) => {
-      const path: [number, number][] =
-        corridor.path && corridor.path.length >= 2
-          ? (corridor.path as [number, number][])
-          : corridor.stations.map((s) => [s.lon, s.lat] as [number, number]);
-
-      let timestamps: number[] = corridor.timestamps || [];
-      if (!timestamps || timestamps.length !== path.length) {
-        const total = corridor.total_km || 1000;
-        timestamps = corridor.stations.map((s, idx) =>
-          idx === 0
-            ? 0
-            : idx === corridor.stations.length - 1
-            ? 1000
-            : Math.round((s.cumulative_km / total) * 1000)
-        );
-      }
-
-      return {
-        corridor_id: corridor.corridor_id || `GQ_${corridor.leg_id}`,
-        leg_id: corridor.leg_id,
-        path,
-        timestamps,
-        congestion_score:
-          corridor.congestion_score ??
-          (corridor.leg_id === 'WEST' || corridor.leg_id === 'NORTH_EAST' ? 8.5 : 5.5),
-        status:
-          corridor.status ||
-          (corridor.leg_id === 'WEST' || corridor.leg_id === 'NORTH_EAST' ? 'CRITICAL' : 'NORMAL'),
-        display_name: corridor.display_name,
-      };
-    });
-  }, [corridors]);
-
-  const stationData = useMemo(() => {
-    const seen = new Set<string>();
-    const stations: Array<{ position: [number, number]; code: string; name: string }> = [];
-    corridors.forEach((c) =>
-      c.stations.forEach((s) => {
-        if (!seen.has(s.code)) {
-          seen.add(s.code);
-          stations.push({ position: [s.lon, s.lat], code: s.code, name: s.name });
-        }
-      }),
-    );
-    return stations;
-  }, [corridors]);
-
-  const trainData = useMemo(
-    () =>
-      trains
-        .filter((train) => train.corridor_leg)
-        .sort((a, b) => a.train_number.localeCompare(b.train_number))
-        .map((train) => {
-          const action = getAction(train, activeBlocks);
-
-          // Semantic Colors from Tactical ATC Palette
-          const isDelayedOrHeld =
-            action === 'HOLD' ||
-            train.status === 'HELD' ||
-            action === 'DIVERT' ||
-            action === 'LOOP' ||
-            train.status === 'LOOPED' ||
-            Boolean(train.delay_minutes && train.delay_minutes > 0);
-
-          const color = getTacticalTrainColor(train, action, isDelayedOrHeld, colorMode);
-
-          // Azimuth / Bearing for directional tactical rotation
-          const bearing =
-            train.bearing ??
-            train.heading ??
-            (train.track_line === 'UP' ? 45 : 225);
-
-          return {
-            id: train.train_number,
-            train_number: train.train_number,
-            name: train.train_name,
-            position: [train.lon, train.lat] as [number, number],
-            color,
-            bearing,
-            heading: bearing,
-            radius: isDelayedOrHeld ? 10 : action !== 'NONE' ? 10 : 7,
-            speed: Math.round(train.speed_kmph),
-            status: train.status,
-            action,
-            trail: buildTrail(train),
-            category: train.category,
-          };
-        }),
-    [trains, activeBlocks, colorMode],
-  );
-
-  const detourPaths = useMemo(() => {
-    const paths: Array<{ path: [number, number][]; color: [number, number, number, number] }> = [];
-
-    activeBlocks.forEach((block) => {
-      const corridor = findCorridorForBlock(corridors, block);
-      if (!corridor) return;
-
-      const fromStation = corridor.stations.find((s) => s.code === block.request.from_station);
-      const toStation = corridor.stations.find((s) => s.code === block.request.to_station);
-      if (!fromStation || !toStation) return;
-
-      const affectedTrains = trains.filter((train) => getAction(train, [block]) === 'DIVERT');
-      const cautionColor = getMapColor('caution', colorMode);
-      affectedTrains.forEach((train) => {
-        paths.push({
-          path: [
-            [train.lon, train.lat],
-            [(fromStation.lon + toStation.lon) / 2 + 0.4, (fromStation.lat + toStation.lat) / 2 + 0.6],
-            [toStation.lon, toStation.lat],
-          ],
-          color: [...cautionColor, 200],
-        });
-      });
-    });
-
-    return paths;
-  }, [activeBlocks, corridors, trains, colorMode]);
-
-  // 3D block extruded pillars
-  const blockPillars = useMemo(
-    () => activeBlocks.flatMap((block) => create3DBlockPillars(block, corridors, colorMode)),
-    [activeBlocks, corridors, colorMode],
-  );
-
-  // Active block segment lines
-  const blockHighlightLines = useMemo(
-    () => createBlockLines(activeBlocks, corridors, colorMode),
-    [activeBlocks, corridors, colorMode],
-  );
-
+  const routes = useMemo(() => corridors.map(c => ({ ...c,
+    route: c.path?.length ? c.path : c.stations.map(s => [s.lon, s.lat] as Coordinate) })), [corridors]);
+  const stations = useMemo(() => [...new globalThis.Map(corridors.flatMap(c => c.stations).map(s => [s.code, s])).values()]
+    .map(s => ({ ...s, position: [s.lon, s.lat] as Coordinate, hub: HUBS[s.code] })), [corridors]);
+  const viewport = useMemo(() => new WebMercatorViewport({ ...size, ...view }), [size, view]);
+  const clusters = useMemo(() => clusterTrains(trains, point => viewport.project(point),         view.zoom < 7 ? 29 : 20, selectedTrainId), [trains, viewport, view.zoom, selectedTrainId]);
+  const singles = clusters.filter(c => c.trains.length === 1);
+  const grouped = clusters.filter(c => c.trains.length > 1);
+  const selected = trains.find(t => t.train_number === selectedTrainId);
+  const blocks = useMemo(() => activeBlocks.map(block => ({ block, path: getBlockPath(block, corridors) })).filter(b => b.path.length > 1), [activeBlocks, corridors]);
+  const blockBeacons = blocks.flatMap(b => b.path.filter((_, index) => index % Math.max(1, Math.floor(b.path.length / 24)) === 0).map(position => ({...b, position})));
+  const blockEnds = blocks.flatMap(b => [b.path[0], b.path[b.path.length - 1]].map(position => ({ ...b, position })));
+  const pickTrain = (cluster: TrainCluster) => {
+    if (cluster.trains.length > 1) {
+      // Collocated trains cannot be separated by zoom; always expose one in the searchable list.
+      onTrainClick?.(cluster.trains[0]);
+      fit(cluster.trains.map(t => [t.lon, t.lat]));
+    } else onTrainClick?.(cluster.trains[0]);
+  };
   const layers = [
-    // 1. TACTICAL BACKBONE - PASS 1: The Ambient Glow (Thick & Translucent neon emission)
-    new PathLayer({
-      id: 'gq-ambient-glow',
-      data: corridorData,
-      getPath: (d: any) => d.path,
-      getColor: [167, 243, 208, 40], // Tactical Mint (#A7F3D0) at ~15% opacity
-      getWidth: 8000, // Scale appropriately so it looks like a 10px-15px wide glow on the screen
-      widthMinPixels: 6,
-      widthMaxPixels: 20,
-      capRounded: true,
-      jointRounded: true,
-      parameters: {
-        blendEquation: GL.FUNC_ADD, // Forces the neon additive blending
-      },
-    }),
-
-    // 2. TACTICAL BACKBONE - PASS 2: The Core Rail (Razor-sharp bright line through center of glow)
-    new PathLayer({
-      id: 'gq-core-rail',
-      data: corridorData,
-      getPath: (d: any) => d.path,
-      getColor: [167, 243, 208, 230], // High-visibility tactical mint core line
-      getWidth: 2,
-      widthUnits: 'pixels',
-      widthMinPixels: 1.5,
-      widthMaxPixels: 3,
-      capRounded: true,
-      jointRounded: true,
-      opacity: 0.95,
-    }),
-
-    // 3. TACTICAL BACKBONE - PASS 3: The Junction Anchors (High-contrast nodes at major vertices)
-    new ScatterplotLayer({
-      id: 'gq-junction-anchors',
-      data: stationData,
-      getPosition: (d: any) => d.position,
-      getFillColor: [13, 19, 17, 255], // Deep obsidian core
-      getLineColor: [167, 243, 208, 240], // Tactical Mint neon halo ring
-      getRadius: 4.5,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 3.5,
-      radiusMaxPixels: 8,
-      lineWidthMinPixels: 1.5,
-      stroked: true,
-      filled: true,
-      pickable: true,
-      onClick: (info: any) => {
-        if (info.object) {
-          setPrefillStation(info.object.code);
-        }
-      },
-    }),
-
-    // 2. Glowing Block Segment Highlight Lines (Tactical status indicators)
-    new PathLayer({
-      id: 'active-block-segment',
-      data: blockHighlightLines,
-      getPath: (d: any) => d.path,
-      getColor: (d: any) => d.color,
-      widthMinPixels: 5.5,
-      widthUnits: 'pixels',
-      jointRounded: true,
-      capRounded: true,
-      opacity: 0.95,
-    }),
-
-    // 3. 3D Extruded Hexagonal Tactical Pillars (Cinematic "Stand Up" Live Extrusion)
-    new ColumnLayer({
-      id: 'block-3d-pillars',
-      data: blockPillars,
-      diskResolution: highPerformanceVfx ? 12 : 6,
-      radius: 500, // 500m radius column for crisp tactical perspective
-      radiusMinPixels: 4,
-      radiusMaxPixels: 26,
-      extruded: true,
-      pickable: true,
-      elevationScale: animatedElevationScale,
-      material: highPerformanceVfx
-        ? {
-            ambient: 0.35,
-            diffuse: 0.8,
-            shininess: 40,
-            specularColor: [255, 255, 255],
-          }
-        : undefined,
-      transitions: {
-        elevationScale: {
-          duration: 1500,
-          easing: (t: number) => 1 - Math.pow(1 - t, 3),
-        },
-      },
-      getPosition: (d: any) => d.position,
-      getElevation: (d: any) => d.elevation,
-      getFillColor: (d: any) => d.color,
-      getLineColor: (d: any) => [d.color[0], d.color[1], d.color[2], 255],
-      onClick: (info: any) => {
-        const block = activeBlocks.find((candidate) => candidate.id === info.object?.blockId);
-        if (block) onBlockClick?.(block);
-      },
-      lineWidthMinPixels: 1.5,
-      wireframe: true,
-    }),
-
-    // 4. Detour / Regulation Paths (Alert Orange status-caution)
-    new LineLayer({
-      id: 'detour-routes',
-      data: detourPaths,
-      getSourcePosition: (d: any) => d.path[0],
-      getTargetPosition: (d: any) => d.path[1],
-      getColor: (d: any) => d.color,
-      getWidth: 2.5,
-      widthUnits: 'pixels',
-      opacity: 0.9,
-    }),
-
-    // 5. Train Speed Trails (High-contrast operational trails)
-    new PathLayer({
-      id: 'train-trails',
-      data: trainData.map((train) => ({ path: train.trail, color: [...train.color, 75] })),
-      getPath: (d: any) => d.path,
-      getColor: (d: any) => d.color,
-      widthMinPixels: 2.8,
-      widthUnits: 'pixels',
-      opacity: 0.85,
+    new PathLayer({ id: 'rail-shadow', data: routes, getPath: d => d.route, getColor: [1, 7, 15, 240], getWidth: 9, widthUnits: 'pixels', capRounded: true, jointRounded: true }),
+    new PathLayer({ id: 'golden-glow', data: routes, getPath: d => d.route,       getColor: [242, 192, 91, 45],
+      getWidth: highPerformanceVfx ? 18 : 7, widthUnits: 'pixels', capRounded: true, jointRounded: true }),
+    new PathLayer({ id: 'golden-quadrilateral', data: routes, getPath: d => d.route,
+      getColor: d => !focusCorridor || focusCorridor === 'ALL' || d.leg_id === focusCorridor ? GOLD : [123, 111, 87, 100],
+      getWidth: d => d.leg_id === focusCorridor ? 4.5 : 3, widthUnits: 'pixels', capRounded: true, jointRounded: true,
+      updateTriggers: { getColor: focusCorridor, getWidth: focusCorridor } }),
+    new ScatterplotLayer({ id: 'stations', data: stations.filter(s => s.hub || (showStations && view.zoom >= 6)), getPosition: d => d.position,
+      getRadius: d => d.hub ? 5 : 3, radiusUnits: 'pixels', stroked: true, getFillColor: [14, 23, 35, 255], getLineColor: GOLD,
+      lineWidthMinPixels: 1.5, pickable: true, onClick: info => { if (info.object) onStationClick?.(info.object.code); } }),
+    new TextLayer({ id: 'hub-labels', data: stations.filter(s => s.hub), getPosition: d => d.position, getText: d => d.hub,
+      getPixelOffset: [12, -13], getTextAnchor: 'start',       getSize: 13, fontFamily: 'Inter, Segoe UI, sans-serif', fontWeight: 600,
+      getColor: [242, 219, 175, 255], outlineWidth: 4, outlineColor: [9, 16, 27, 255], fontSettings: { sdf: true } }),
+    new PathLayer({ id: 'block-outline', data: blocks, visible: showBlocks, getPath: d => d.path, getWidth: 13, widthUnits: 'pixels', getColor: [9, 16, 27, 255], capRounded: true }),
+        new PathLayer({
+      id: "implemented-block-glow",
+      data: blocks,
+      visible: showBlocks && highPerformanceVfx,
+      getPath: (d) => d.path,
+      getWidth: 25,
+      widthUnits: "pixels",
+      getColor: [...coral.slice(0, 3), 48] as [number, number, number, number],
       capRounded: true,
       jointRounded: true,
     }),
-
-    // 6. Live Train Markers: Directional Tactical IconLayer (ATC Symbology)
-    new IconLayer({
-      id: 'train-icons',
-      data: trainData,
-      iconAtlas: TACTICAL_CHEVRON_SVG,
-      iconMapping: TACTICAL_ICON_MAPPING,
-      getIcon: () => 'chevron',
-      getPosition: (d: any) => d.position,
-      getAngle: (d: any) => (d.bearing ?? d.heading ?? 0) * -1,
-      getColor: (d: any) => d.color,
-      getSize: 18,
-      sizeUnits: 'pixels',
-      sizeMinPixels: 12,
-      sizeMaxPixels: 24,
-      pickable: true,
-      transitions: {
-        getPosition: 1000,
-        getAngle: 600,
-      },
-      onHover: (info: any) => {
-        if (info.object) {
-          setHoverInfo({ object: info.object, x: info.x, y: info.y });
-        } else {
-          setHoverInfo(null);
-        }
-      },
+    new PathLayer({
+      id: "implemented-blocks", data: blocks, visible: showBlocks, getPath: d => d.path,
+      getColor: coral, getWidth: d => d.block.id === selectedBlockId ? 9 : 6, widthUnits: 'pixels', capRounded: true, jointRounded: true,
+      pickable: true, onClick: info => { if (info.object) onBlockClick?.(info.object.block); }, updateTriggers: { getWidth: selectedBlockId } }),
+    new ColumnLayer({ id: 'block-beacons',       data: highPerformanceVfx ? blockBeacons : blockEnds, visible: showBlocks && view.pitch > 10,
+      getPosition: d => d.position,       getElevation: 5500,
+      radius: 350, diskResolution: 8, extruded: true, getFillColor: [...coral.slice(0, 3), 160] as [number, number, number, number], pickable: true,
+      onClick: info => { if (info.object) onBlockClick?.(info.object.block); } }),
+    new PathLayer({ id: 'raised-block-boundary', data: blocks, visible: showBlocks && view.pitch > 10, getPath: d => d.path.map((p: Coordinate) => [p[0], p[1], 5500]), getColor: coral, getWidth: 2, widthUnits: 'pixels', pickable: true, onClick: info => { if(info.object) onBlockClick?.(info.object.block); } }),
+    new ScatterplotLayer({ id: 'block-boundaries', data: blockEnds, visible: showBlocks, getPosition: d => d.position,
+      getFillColor: [11, 19, 30, 255], getLineColor: coral, stroked: true, lineWidthMinPixels: 2.5, getRadius: 6, radiusUnits: 'pixels' }),
+    new ScatterplotLayer({       id: "train-hit-targets",
+      billboard: true,
+      parameters: { depthWriteEnabled: false, depthCompare: "always" }, data: clusters, visible: showTrains, getPosition: d => d.position,
+      getRadius: d => d.trains.length > 1 ? 15 : 16, radiusUnits: 'pixels', getFillColor: [7, 25, 38, 240],
+      stroked: true, getLineColor: [113, 219, 246, 110], lineWidthMinPixels: 1.2, pickable: true,
+      onClick: info => { if (info.object) pickTrain(info.object); },
+      onHover: info => setHover(info.object ? { x: info.x, y: info.y,
+        text: info.object.trains.length > 1 ? `${info.object.trains.length} trains · click to explore` : `#${info.object.trains[0].train_number} · ${info.object.trains[0].train_name}` } : null) }),
+    new IconLayer({       id: "train-cabs",
+      parameters: { depthWriteEnabled: false, depthCompare: "always" }, data: singles, visible: showTrains, iconAtlas: TRAIN_ICON,
+      iconMapping: { train: { x: 0, y: 0, width: 64, height: 64, mask: false } }, getIcon: () => 'train',
+      getPosition: d => d.position, getColor: CYAN, getSize: 31, sizeUnits: 'pixels',
+      getAngle: d => -(d.trains[0].bearing ?? d.trains[0].heading ?? 0), billboard: true,
+      transitions: reduced || !highPerformanceVfx ? {} : { getPosition: 900, getAngle: 500 }, pickable: false }),
+    new TextLayer({       id: "cluster-counts",
+      parameters: { depthWriteEnabled: false, depthCompare: "always" }, data: grouped, visible: showTrains, getPosition: d => d.position,
+      getText: d => String(d.trains.length), getColor: CYAN, getSize: 12, fontWeight: 700, fontFamily: 'Inter, Segoe UI, sans-serif', pickable: false }),
+    new ScatterplotLayer({       id: "selected-train-ring",
+      billboard: true,
+      parameters: { depthWriteEnabled: false, depthCompare: "always" }, data: selected ? [selected] : [], visible: showTrains,
+      getPosition: d => [d.lon, d.lat], getRadius: 23, radiusUnits: 'pixels', filled: false, stroked: true, getLineColor: [240, 248, 255, 240], lineWidthMinPixels: 2 }),
+        new TextLayer({
+      id: "train-numbers",
+      parameters: { depthWriteEnabled: false, depthCompare: "always" }, data: singles.filter(c => c.trains[0].train_number === selectedTrainId || view.zoom >= 9), visible: showTrains,
+      getPosition: d => d.position, getText: d => `#${d.trains[0].train_number}`, getPixelOffset: [23, 0], getTextAnchor: 'start',
+      getColor: [234, 247, 255, 255], getSize: 12, fontFamily: 'Inter, Segoe UI, sans-serif', background: true,
+      getBackgroundColor: [11, 24, 38, 235], backgroundPadding: [5, 3],       fontWeight: 600,
     }),
-
-    // 7. Tactical Train Identification TextLayer (Callsigns / Numbers)
     new TextLayer({
-      id: 'train-labels',
-      data: trainData,
-      visible: viewState.zoom >= 6,
-      opacity: viewState.zoom < 6 ? 0 : 1,
-      getPosition: (d: any) => d.position,
-      getText: (d: any) => d.train_number,
-      fontFamily: '"JetBrains Mono", monospace',
-      getSize: 10,
-      sizeUnits: 'pixels',
-      getColor: [226, 234, 244, 200],
-      getPixelOffset: [20, 0],
-      getTextAnchor: 'start',
-      getAlignmentBaseline: 'center',
-      characterSet: 'auto',
-      pickable: false,
+      id: "implemented-block-labels",
+      data: blocks,
+      visible: showBlocks,
+      parameters: { depthWriteEnabled: false, depthCompare: "always" },
+      getPosition: (d) => d.path[Math.floor(d.path.length / 2)],
+      getText: (d) => `BLOCK  ${d.block.request.from_station} → ${d.block.request.to_station}`,
+      getPixelOffset: [0, -30],
+      getSize: 11,
+      fontFamily: "Inter, Segoe UI, sans-serif",
+      fontWeight: 650,
+      getColor: coral,
+      background: true,
+      getBackgroundColor: [37, 19, 18, 240],
+      backgroundPadding: [9, 6],
+      pickable: true,
+      onClick: (info) => {
+        if (info.object) onBlockClick?.(info.object.block);
+      },
     }),
   ];
 
-  return (
-    <div ref={mapContainerRef} className="h-full w-full relative bg-[#0D1311]">
-      <DeckGL
-        viewState={viewState}
-        controller={{
-          dragRotate: true,
-          touchRotate: true,
-          keyboard: true,
-        }}
-        onViewStateChange={({ viewState: newViewState }: any) =>
-          setViewState(newViewState as typeof viewState)
-        }
-        layers={layers}
-      >
-        <Map
-          mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
-          reuseMaps
-          style={{
-            width: '100%',
-            height: '100%',
-            // Keep the dark basemap readable beneath the tactical overlays.
-            filter: 'brightness(0.98) contrast(1.08) saturate(0.9)',
-          }}
-        />
-      </DeckGL>
-
-      {/* Train / Object Tooltip - Tactical Rail Engine Specification */}
-      {hoverInfo && hoverInfo.object && (
-        <div
-          className="pointer-events-none absolute z-50 rounded-xl border border-[#2C3A35] bg-[#1A2421]/95 p-3 font-mono text-xs text-[#E2EAF4] shadow-[0_8px_32px_rgba(0,0,0,0.85)] backdrop-blur-xl"
-          style={{ left: hoverInfo.x, top: hoverInfo.y + 15 }}
-        >
-          <div className="mb-1 flex items-center justify-between gap-4 font-bold">
-            <span style={{ color: `rgb(${hoverInfo.object.color.slice(0, 3).join(',')})` }}>
-              TRK-ID #{hoverInfo.object.id}
-            </span>
-            <span className="text-[10px] text-[#E2EAF4]/60 uppercase tracking-wider">{hoverInfo.object.category}</span>
-          </div>
-          {hoverInfo.object.name && (
-            <div className="text-[11px] text-[#E2EAF4]/85 mb-1 font-sans">{hoverInfo.object.name}</div>
-          )}
-          <div className="text-[#E2EAF4]/60">
-            Velocity: <span className="text-[#E2EAF4] font-semibold">{hoverInfo.object.speed} km/h</span>
-          </div>
-          <div className="text-[#E2EAF4]/60">
-            Telemetry:{' '}
-            <span
-              className={
-                hoverInfo.object.status === 'RUNNING'
-                  ? 'text-[#34D399] font-semibold'
-                  : 'text-[#F97316] font-semibold'
-              }
-            >
-              {hoverInfo.object.status}
-            </span>
-          </div>
-          {hoverInfo.object.action && hoverInfo.object.action !== 'NONE' && (
-            <div className="mt-1 pt-1 border-t border-[#2C3A35] text-[#EF4444] font-bold">
-              DIRECTIVE: {hoverInfo.object.action}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Reset Camera View Button - Tactical Specification */}
-      <button
-        className="absolute bottom-6 right-6 z-10 rounded-full border border-[#2C3A35] bg-[#1A2421]/80 p-2.5 text-[#E2EAF4]/70 shadow-[0_4px_20px_rgba(0,0,0,0.6)] backdrop-blur-md transition hover:border-[#A7F3D0] hover:bg-[#1A2421] hover:text-[#A7F3D0] hover:shadow-[0_0_12px_rgba(167,243,208,0.3)]"
-        onClick={() => {
-          setViewState({
-            ...INITIAL_VIEW_STATE,
-            transitionDuration: 1500,
-            transitionInterpolator: new FlyToInterpolator({ speed: 1.2 }),
-          });
-        }}
-        title="Reset Tactical Camera"
-      >
-        <Navigation className="h-5 w-5" />
-      </button>
+  return <div ref={container} className="network-canvas" aria-label="Interactive Golden Quadrilateral railway map">
+    <DeckGL viewState={{ ...view, minZoom: 3, maxZoom: 16 }} controller={{ dragRotate: true, keyboard: true }}
+      onViewStateChange={({ viewState }) => setView(viewState as MapViewState)} layers={layers} getCursor={({ isHovering, isDragging }) => isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'}>
+      <Map           mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json" reuseMaps onError={() => setMapError(true)} onLoad={() => setMapError(false)} />
+    </DeckGL>
+    <div className="map-grain" aria-hidden="true" />
+    {mapError && <div className="map-notice" role="status">Basemap unavailable. Backend network overlays remain visible.</div>}
+    {hover && <div className="map-tooltip" style={{ left: Math.min(hover.x + 18, Math.max(12, size.width - 260)), top: Math.min(hover.y + 20, size.height - 60) }}>{hover.text}</div>}
+    <div className="map-tools" aria-label="Map controls">
+      <button title="Zoom in" aria-label="Zoom in" onClick={() => setView(v => ({ ...v, zoom: Math.min(v.zoom + .7, 16), transitionDuration: transition }))}><Plus size={17} /></button>
+      <button title="Zoom out" aria-label="Zoom out" onClick={() => setView(v => ({ ...v, zoom: Math.max(v.zoom - .7, 3), transitionDuration: transition }))}><Minus size={17} /></button>
+      <span />
+      <button title="Fit entire network" aria-label="Fit entire network" onClick={() => fit(networkPoints)}><Focus size={18} /></button>
+      <button title="Toggle 3D perspective" aria-label="Toggle 3D perspective" aria-pressed={view.pitch > 10} onClick={() => setView(v => ({ ...v,               pitch: v.pitch > 10 ? 0 : 42,
+              bearing: v.pitch > 10 ? 0 : -12, transitionDuration: transition }))}><Layers3 size={17} /></button>
     </div>
-  );
-};
+    <div className="map-scale-note">{view.pitch > 10 ? '3D PERSPECTIVE' : 'NETWORK ATLAS'}<span>Scroll to explore · click a train to inspect</span></div>
+  </div>;
+}

@@ -24,3 +24,15 @@ def get_live_trains(
     bundle = request.app.state.gq_bundle
     at_min = time_to_minutes_float(time)
     return compute_live_trains(bundle.network, bundle.timetable, at_min, type)
+
+
+@router.get('/trains/snapshot')
+def train_snapshot(request: Request, time: time_type = Query(...)) -> dict:
+    """Explicit data provenance and complete GQ counts for the control workspace."""
+    bundle = request.app.state.gq_bundle
+    trains = [t for t in compute_live_trains(bundle.network, bundle.timetable,
+              time_to_minutes_float(time)) if t.corridor_leg is not None]
+    counts = {leg: sum(t.corridor_leg == leg for t in trains) for leg in bundle.network.corridors}
+    return {'source': 'TIMETABLE_SIMULATION', 'simulation_time': time.isoformat(),
+            'total': len(trains), 'corridor_counts': counts, 'trains': trains,
+            'notice': 'Interpolated timetable positions, not live GPS. Block decisions are planning overlays, not executed train commands.'}

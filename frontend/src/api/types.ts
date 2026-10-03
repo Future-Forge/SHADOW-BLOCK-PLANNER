@@ -22,14 +22,6 @@ export interface StationItem {
 
 export type StationsByCorridorResponse = Record<CorridorLeg, StationItem[]>;
 
-export interface CorridorTelemetry {
-  corridor_id: string;
-  path: [number, number][];
-  timestamps: number[];
-  congestion_score: number;
-  status: "CRITICAL" | "NORMAL" | "CAUTION" | string;
-}
-
 export interface Corridor {
   id?: string;
   name?: string;
@@ -40,11 +32,7 @@ export interface Corridor {
   destination_code: string;
   total_km: number;
   stations: CorridorStation[];
-  corridor_id?: string;
   path?: [number, number][];
-  timestamps?: number[];
-  congestion_score?: number;
-  status?: "CRITICAL" | "NORMAL" | "CAUTION" | string;
 }
 
 export interface LiveTrainState {
@@ -59,8 +47,15 @@ export interface LiveTrainState {
   status: "RUNNING" | "LOOPED" | "HELD" | "DIVERTED";
   corridor_leg: CorridorLeg | null;
   delay_minutes: number;
-  heading?: number;
-  bearing?: number;
+}
+
+export interface TrainSnapshot {
+  source: 'TIMETABLE_SIMULATION';
+  simulation_time: string;
+  total: number;
+  corridor_counts: Record<string, number>;
+  trains: LiveTrainState[];
+  notice: string;
 }
 
 
@@ -73,6 +68,7 @@ export interface BlockRequest {
   department: "TMS" | "SMMS" | "TDMS";
   criticality: "NORMAL" | "MAJOR" | "EMERGENCY";
   operation_date?: string;
+  expected_start_iso?: string;
   shared_tasks?: { department: BlockRequest['department']; duration_minutes: number }[];
   parallel_work_confirmed?: boolean;
   weather?: { mode: 'seasonal' | 'clear' | 'heavy_rain' | 'high_wind' | 'severe'; exposed_work: boolean; wind_risk_months?: number[] };
@@ -180,11 +176,12 @@ export interface DispatcherChatRequest {
   message: string;
   session_id?: string;
   sim_time?: string;
+  history?: { role: 'user' | 'assistant'; content: string }[];
 }
 
 export interface DispatcherChatResponse {
   response_text: string;
-  action_triggered: "EXECUTE_BLOCK" | "ANALYZE_GAP" | "TRAIN_INSPECT" | "RESEQUENCE" | "DOWNLOAD_CSV" | "NONE";
+  action_triggered: "EXECUTE_BLOCK" | "ANALYZE_GAP" | "TRAIN_INSPECT" | "RESEQUENCE" | "DOWNLOAD_CSV" | "NONE" | "MODEL_PREDICTION" | "THERMAL_ANALYSIS" | "SAFETY_CHECKLIST" | "ENGINE_INFO" | "PLAN_PROPOSAL" | "REVIEW_REQUIRED" | "NETWORK_SUMMARY";
   payload: Record<string, any>;
   fly_to_target?: FlyToTarget | null;
 }

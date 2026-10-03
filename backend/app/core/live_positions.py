@@ -12,7 +12,7 @@ from __future__ import annotations
 import math
 from app.core.gq_network import GQNetworkGraph, haversine_km
 from app.core.timetable_engine import TimetableEngine
-from app.data.gq_corridors import resolve_track_line
+from app.data.gq_corridors import resolve_track_line, same_leg
 from app.models.enums import TrainStatus, TrainFilter, TrainCategory, TrackLine
 from app.models.schemas import LiveTrainState
 
@@ -54,17 +54,6 @@ def _interpolate_along_polyline(coords: list[list[float]], fraction: float) -> t
         cur_dist += seg_len
 
     return coords[-1][0], coords[-1][1]
-
-
-def calculate_bearing(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Calculates forward azimuth / bearing in degrees (0..360) from point 1 to point 2."""
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
-    delta_lambda = math.radians(lon2 - lon1)
-    y = math.sin(delta_lambda) * math.cos(phi2)
-    x = math.cos(phi1) * math.sin(phi2) - math.sin(phi1) * math.cos(phi2) * math.cos(delta_lambda)
-    theta = math.atan2(y, x)
-    return round((math.degrees(theta) + 360) % 360, 1)
 
 
 def compute_live_trains(
@@ -115,9 +104,8 @@ def compute_live_trains(
             lat = station_a.lat + (station_b.lat - station_a.lat) * pos.fraction
             lon = station_a.lon + (station_b.lon - station_a.lon) * pos.fraction
 
-        leg_a = network.leg_for_station(pos.prev_stop.station_code)
-        leg_b = network.leg_for_station(pos.next_stop.station_code)
-        leg_id = leg_a or leg_b
+        # A single corridor endpoint does not make an off-network hop a GQ train.
+        leg_id = same_leg(pos.prev_stop.station_code, pos.next_stop.station_code, network.station_leg_index)
         track_line = (
             resolve_track_line(leg_id, pos.prev_stop.station_code, pos.next_stop.station_code)
             if leg_id else None
@@ -137,7 +125,6 @@ def compute_live_trains(
             hop_distance_km = max(pos.next_stop.distance_km - pos.prev_stop.distance_km, 0.0)
         hop_span_min = max(pos.arr_min - pos.dep_min, 1)
         speed_kmph = (hop_distance_km / hop_span_min) * 60 if hop_distance_km > 0 else 0.0
-        train_bearing = calculate_bearing(station_a.lat, station_a.lon, station_b.lat, station_b.lon)
 
         results.append(
             LiveTrainState(
@@ -152,8 +139,6 @@ def compute_live_trains(
                 status=TrainStatus.RUNNING,
                 corridor_leg=leg_id,
                 delay_minutes=0.0,
-                heading=train_bearing,
-                bearing=train_bearing,
             )
         )
 
