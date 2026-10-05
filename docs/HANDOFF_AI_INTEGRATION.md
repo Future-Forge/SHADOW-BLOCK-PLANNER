@@ -72,8 +72,21 @@ No result means a train was stopped, signals locked or OHE isolated.
 
 ## Validation
 
-Local: all 51 application/AI contract tests pass; real root model and real
+Local: 51 application/AI contract tests plus two package/persistence regression tests pass; real root model and real
 OR-Tools are exercised (unit tests replace storage only). Frontend production
-build and all 16 frontend tests pass. Docker is unavailable on the local host;
-the GitHub Full Stack Integration job is the deployment verification authority.
-See the PR checks for its final result and any follow-up fixes.
+build and all 16 frontend tests pass. Docker is unavailable on the local host; GitHub performed the actual container verification.
+
+Verified code commit: 9447f694fa6837243f06ff61ca56f1f1767ad269.
+- [Frontend build and 16 tests: passed](https://github.com/Future-Forge/SHADOW-BLOCK-PLANNER/actions/runs/37276643618).
+- [Backend and AI suite: passed](https://github.com/Future-Forge/SHADOW-BLOCK-PLANNER/actions/runs/37276643718).
+- [Clean-download Compose integration: passed](https://github.com/Future-Forge/SHADOW-BLOCK-PLANNER/actions/runs/37276643607).
+
+The container run evaluated 1,800 synthetic defects, formed 275 candidates and
+returned 275 proposals. PostgreSQL rows and Redis cached blocks matched the API
+response. Re-running initialization preserved those rows. Model inference
+returned 78.39 for the reference inputs. These are reproducible demo execution
+results, not evidence of railway safety or production data accuracy.
+
+Additional fixes discovered during verification: removed Python package shadowing
+between the two ai_engine folders, and protected existing non-proposal schedules
+against the original batch replacement routine. No optimizer policy was changed.
