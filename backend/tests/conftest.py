@@ -2,7 +2,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from ai_engine.service import app as ai_app
-import app.ai_engine.client as adapter
+import app.ai_adapters.client as adapter
 
 
 @pytest.fixture(autouse=True)

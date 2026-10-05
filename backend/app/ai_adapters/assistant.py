@@ -10,8 +10,8 @@ import re
 from fastapi import HTTPException, Request
 from pydantic import ValidationError
 
-from app.ai_engine.inference import DefectFeatures, predict, model_status
-from app.ai_engine.domain import ThermalFeatures, thermal_risk, safety_checklist
+from app.ai_adapters.inference import DefectFeatures, predict, model_status
+from app.ai_adapters.domain import ThermalFeatures, thermal_risk, safety_checklist
 from app.core.gemini_agent import STATION_SYNONYMS, _resolve_report_period, DispatcherExecutionContext, create_dispatcher_tools
 from app.core.nlp_parser import _find_duration_minutes, _find_department, _find_criticality
 from app.core.live_positions import compute_live_trains

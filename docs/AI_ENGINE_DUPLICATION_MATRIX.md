@@ -1,5 +1,10 @@
 # AI duplication matrix
 
+> Folder clarification (2026-10-05): the backend helpers now live in
+> `backend/app/ai_adapters/`. The root `ai_engine/` is the sole model/optimizer
+> service and is required. References to the old backend folder below describe
+> the inspected baseline, not a second engine to run or copy.
+
 Baseline inspection precedes implementation. Keep root `ai_engine`, `data`, and
 `database` in place; no bulk folder move is appropriate.
 

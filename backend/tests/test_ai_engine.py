@@ -2,9 +2,9 @@ import hashlib
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-from app.ai_engine.inference import DefectFeatures, predict
+from app.ai_adapters.inference import DefectFeatures, predict
 from ai_engine.xgboost_scorer import MODEL_PATH
-from app.ai_engine.assistant import stations_in, explicit_time
+from app.ai_adapters.assistant import stations_in, explicit_time
 
 
 @pytest.fixture(scope="module")

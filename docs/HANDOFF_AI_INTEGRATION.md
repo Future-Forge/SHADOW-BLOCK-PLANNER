@@ -90,3 +90,14 @@ results, not evidence of railway safety or production data accuracy.
 Additional fixes discovered during verification: removed Python package shadowing
 between the two ai_engine folders, and protected existing non-proposal schedules
 against the original batch replacement routine. No optimizer policy was changed.
+
+## Folder clarification follow-up
+
+Renamed `backend/app/ai_engine/` to `backend/app/ai_adapters/` and updated all
+Python imports and test imports. Those files only connect to the service or
+handle app-specific conversation/scenario logic. The duplicate model was already
+removed in the previous change. There is now one `ai_engine` directory in the
+source tree: the required original engine at the repository root. Deleting it
+would break scoring, batch planning and Docker builds. Added folder READMEs so
+users extracting the repository can see these roles immediately. No algorithms,
+model artifacts, data files, endpoint paths or deployment topology changed.

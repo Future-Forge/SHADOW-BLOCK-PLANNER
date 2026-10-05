@@ -1,7 +1,7 @@
 """App-facing orchestration; no optimizer implementation here."""
 from fastapi import APIRouter
 from ai_engine.contracts import PlanResult
-from app.ai_engine.client import ai_request
+from app.ai_adapters.client import ai_request
 
 router = APIRouter(prefix="/api/v1/ai", tags=["root AI service"])
 

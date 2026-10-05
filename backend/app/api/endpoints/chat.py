@@ -12,9 +12,9 @@ from fastapi import APIRouter, Request
 
 from app.api.endpoints.planner import analyze_block
 from app.core.nlp_parser import extract_entities
-from app.ai_engine.assistant import process_assistant
-from app.ai_engine.inference import DefectFeatures, model_status, predict
-from app.ai_engine.domain import ThermalFeatures, SafetyFeatures, thermal_risk, safety_checklist
+from app.ai_adapters.assistant import process_assistant
+from app.ai_adapters.inference import DefectFeatures, model_status, predict
+from app.ai_adapters.domain import ThermalFeatures, SafetyFeatures, thermal_risk, safety_checklist
 from app.models.enums import Criticality, TrackLine
 from app.models.schemas import (
     ChatQuery,

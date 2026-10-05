@@ -146,3 +146,6 @@ not been independently reverified for this application integration.
 
 ## Integration update (2026-10-05)
 Default deployment now uses `ai_engine.service:app`; original algorithms remain here. See [runtime map](../docs/AI_ENGINE_RUNTIME_MAP.md) and [handoff](../docs/HANDOFF_AI_INTEGRATION.md). Legacy main/worker are retained but not deployed by default.
+
+## Folder clarification follow-up
+Backend helpers were renamed to `backend/app/ai_adapters/`; imports and tests follow that name. This root folder remains the only AI engine and must be retained in downloads. See README.md in each folder.

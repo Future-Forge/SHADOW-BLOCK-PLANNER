@@ -1,5 +1,10 @@
 # AI runtime map
 
+> Folder clarification (2026-10-05): the backend helpers now live in
+> `backend/app/ai_adapters/`. The root `ai_engine/` is the sole model/optimizer
+> service and is required. References to the old backend folder below describe
+> the inspected baseline, not a second engine to run or copy.
+
 Inspected baseline: `00b277e` (original AI/DS commit `0862099`). The owner
 confirmed on 2026-10-05 that this change must integrate the existing stack,
 without migrating frameworks.
