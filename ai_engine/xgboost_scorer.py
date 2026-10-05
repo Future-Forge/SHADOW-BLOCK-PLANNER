@@ -116,11 +116,12 @@ def get_criticality_model() -> xgb.Booster:
     global _MODEL_CACHE
     if _MODEL_CACHE is None:
         if not MODEL_PATH.exists():
-            logger.info("Model file not found. Training a new model...")
-            _MODEL_CACHE = train_criticality_model(MODEL_PATH)
+            raise FileNotFoundError(f"Required model artifact missing: {MODEL_PATH}. Runtime training is disabled.")
         else:
-            booster = xgb.Booster()
+            booster = xgb.Booster(params={"nthread": 1})
             booster.load_model(str(MODEL_PATH))
+            if booster.feature_names != FEATURE_NAMES:
+                raise RuntimeError("Model feature order does not match the original scorer.")
             _MODEL_CACHE = booster
     return _MODEL_CACHE
 

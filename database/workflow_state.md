@@ -23,3 +23,5 @@
 ## Backend Handoff Notes
 * **Read Requirements:** Backend BFF will query `scheduled_blocks` for streaming block maintenance schedules to the Next.js UI.
 * **Trace Log:** Refer to [traceability_handoff.log](file:///C:/Users/Pavankumar/Documents/Shadow-blockplanner/traceability_handoff.log) for real-time infrastructure metadata.
+## Integration update (2026-10-05)
+Schema initialization is now idempotent; existing tables are not dropped. Demo CSV import requires `MODE=demo`. Compose runs db-init before AI readiness. See [data map](../docs/DATA_RUNTIME_MAP.md).

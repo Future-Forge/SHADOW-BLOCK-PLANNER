@@ -67,11 +67,13 @@ def get_db_connection():
         port=DB_PORT,
         dbname=DB_NAME,
         user=DB_USER,
-        password=DB_PASSWORD
+        password=DB_PASSWORD,
+        connect_timeout=3
     )
 
 def get_redis_client():
-    return redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
+    return redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True,
+                       socket_connect_timeout=3, socket_timeout=3)
 
 class BlockOptimizationEngine:
     def __init__(self):
@@ -464,6 +466,9 @@ class BlockOptimizationEngine:
         elif status == pywraplp.Solver.INFEASIBLE:
             status_str = "INFEASIBLE"
 
+        if status not in (pywraplp.Solver.OPTIMAL, pywraplp.Solver.FEASIBLE):
+            raise RuntimeError(f"Optimizer failed ({status_str}); existing schedule preserved.")
+
         # Extract scheduled results
         scheduled_blocks = []
         total_shadow_hours_saved = 0.0
@@ -580,6 +585,7 @@ class BlockOptimizationEngine:
             logger.info("Successfully cached payload in Redis.")
         except Exception as e:
             logger.error(f"Failed to cache to Redis: {e}")
+            raise
 
     def close(self):
         if self.conn and not self.conn.closed:

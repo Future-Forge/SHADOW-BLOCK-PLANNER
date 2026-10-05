@@ -5,6 +5,8 @@ import { planningFetch } from '../api/planning';
 import type { Evaluation, Operation, Replay } from '../api/planning';
 import { useSimulation } from '../store/SimulationContext';
 
+import { AIBatchPlanner } from './AIBatchPlanner';
+
 const departments = ['TMS', 'SMMS', 'TDMS'] as const;
 const capacities = { TMS_crew: 2, SMMS_crew: 2, TDMS_crew: 2, equipment_sets: 3, vehicles: 2 };
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -30,7 +32,7 @@ export function PlanningLab({ initialRequest, initialDecision, initialTab = 'pla
   initialRequest: BlockRequest; initialDecision?: BlockDecision | null; initialTab?: 'plan' | 'history'; onClose: () => void;
 }) {
   const { corridors, refreshOperations } = useSimulation();
-  const [tab, setTab] = useState<'plan' | 'history'>(initialTab);
+  const [tab, setTab] = useState<'plan' | 'history' | 'ai'>(initialTab);
   const [request, setRequest] = useState<BlockRequest>({ ...initialRequest, operation_date: initialRequest.operation_date || today(),
     resource_capacity: initialRequest.resource_capacity || capacities, weather: initialRequest.weather || { mode: 'seasonal', exposed_work: false } });
   const [decision, setDecision] = useState(initialDecision || null);
@@ -95,8 +97,9 @@ export function PlanningLab({ initialRequest, initialDecision, initialTab = 'pla
         <button ref={closeRef} disabled={busy} onClick={onClose} aria-label="Close Planning Lab" className="rounded-lg p-2 hover:bg-slate-700"><X size={20} /></button>
       </header>
       <nav className="flex gap-2 border-b border-slate-700 px-5 py-3" aria-label="Planning views">
-        <button disabled={busy} onClick={() => setTab('plan')} className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm ${tab === 'plan' ? 'bg-emerald-400 text-black' : 'bg-slate-800'}`}><Layers3 size={16} /> Plan & compare</button>
+        <button disabled={busy} onClick={() => setTab('plan')} className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm ${tab === 'ai' ? <AIBatchPlanner /> : tab === 'plan' ? 'bg-emerald-400 text-black' : 'bg-slate-800'}`}><Layers3 size={16} /> Plan & compare</button>
         <button disabled={busy} onClick={() => setTab('history')} className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm ${tab === 'history' ? 'bg-emerald-400 text-black' : 'bg-slate-800'}`}><History size={16} /> History & evaluation</button>
+        <button disabled={busy} onClick={() => setTab('ai')} className={`rounded-lg px-4 py-2 text-sm ${tab === 'ai' ? 'bg-emerald-400 text-black' : 'bg-slate-800'}`}>AI batch proposals</button>
       </nav>
       <div className="overflow-y-auto p-5">
         {error && <p role="alert" className="mb-4 rounded-lg border border-red-400/50 bg-red-950/50 p-3 text-sm text-red-200">{error} No offline approval was generated.</p>}

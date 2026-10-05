@@ -143,3 +143,6 @@ not been independently reverified for this application integration.
   older local copies included null-filled files and disabled test steps.
 - Virtual environments, installed packages, local secrets, backups, generated
   build output, and runtime SQLite files are excluded from the commit.
+
+## Integration update (2026-10-05)
+Default deployment now uses `ai_engine.service:app`; original algorithms remain here. See [runtime map](../docs/AI_ENGINE_RUNTIME_MAP.md) and [handoff](../docs/HANDOFF_AI_INTEGRATION.md). Legacy main/worker are retained but not deployed by default.

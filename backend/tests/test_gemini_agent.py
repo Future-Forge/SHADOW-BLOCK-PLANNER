@@ -1,3 +1,8 @@
+"""Current assistant contract, replacing obsolete auto-dispatch expectations.
+
+The 00b277e assistant replaced the Gemini dispatcher. Queries must now clarify
+missing inputs and never fabricate live telemetry or execute emergency blocks.
+"""
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -6,144 +11,75 @@ from app.main import app
 @pytest.fixture(scope="module")
 def client(tmp_path_factory):
     with pytest.MonkeyPatch.context() as patch:
-        patch.setenv('SHADOW_BLOCK_DB', str(tmp_path_factory.mktemp('dispatcher') / 'operations.sqlite3'))
+        patch.setenv("SHADOW_BLOCK_DB", str(tmp_path_factory.mktemp("dispatcher") / "operations.sqlite3"))
         with TestClient(app) as test_client:
             yield test_client
 
 
-def test_dispatcher_operational_tms_smms_query(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "What is the difference between TMS and SMMS?"},
-    )
+def query(client, message):
+    response = client.post("/api/v1/chat/dispatcher", json={"message": message})
     assert response.status_code == 200
-    data = response.json()
+    return response.json()
+
+
+def test_knowledge_does_not_run_optimizer(client, monkeypatch):
+    from ai_engine import solver
+    monkeypatch.setattr(solver, "run_optimization", lambda: pytest.fail("Knowledge must not optimize"))
+    data = query(client, "What is the difference between TMS and SMMS?")
     assert data["action_triggered"] == "NONE"
     assert "TMS" in data["response_text"] and "SMMS" in data["response_text"]
 
 
-def test_dispatcher_mumbai_to_surat_user_query(client):
-    """Verifies the exact user query: 'what trains running between mumbai central and surat'."""
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "what trains running between mumbai central and surat"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "LIVE TRAINS ON TRACK" in data["response_text"]
-    assert "BCT" in data["response_text"] and "ST" in data["response_text"]
-    assert data["payload"]["live_trains_count"] > 0
+@pytest.mark.parametrize("message", [
+    "what trains running between mumbai central and surat",
+    "What are the trains running on the track from Mumbai to Surat right now?",
+    "Which trains are delayed today?",
+])
+def test_unsupported_live_queries_never_fabricate_telemetry(client, message):
+    data = query(client, message)
+    assert data["action_triggered"] == "NONE"
+    assert "live_trains_count" not in data["payload"]
+    assert data["fly_to_target"] is None
+    assert "simulation" in data["response_text"]
 
 
-def test_dispatcher_mumbai_to_surat_live_on_track_query(client):
-    """Verifies: 'What are the trains running on the track from Mumbai to Surat right now?'."""
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "What are the trains running on the track from Mumbai to Surat right now?"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "LIVE TRAINS ON TRACK" in data["response_text"]
-    assert "Vande Bharat" in data["response_text"] or "Rajdhani" in data["response_text"]
+def test_incomplete_block_requires_clarification(client):
+    before = app.state.operation_store.list()
+    data = query(client, "Block Surat for 40 mins")
+    assert data["action_triggered"] == "NONE"
+    assert data["response_text"].startswith("Please provide")
+    assert "start time" in data["response_text"]
+    assert app.state.operation_store.list() == before
 
 
-def test_dispatcher_delayed_trains_query(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "Which trains are delayed today?"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "DELAY" in data["response_text"] or "delay" in data["response_text"]
-
-
-def test_dispatcher_block_surat_directive(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "Block Surat for 40 mins"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["action_triggered"] == "ANALYZE_GAP"
-    assert data["payload"]["duration_minutes"] == 40
-    assert data["payload"]["from_station"] == "ST"
-
-
-def test_dispatcher_report_directive(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "Give me the March report"},
-    )
-    assert response.status_code == 200
-    data = response.json()
+def test_report_is_actual_ledger_csv(client):
+    data = query(client, "Give me the March report")
     assert data["action_triggered"] == "DOWNLOAD_CSV"
-    assert "csv_data" in data["payload"]
+    assert data["payload"]["csv_data"].startswith("BlockID,Department,Corridor")
 
 
-def test_dispatcher_emergency_block_directive(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "Emergency block Surat to Mumbai Central due to OHE wire snag"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    # Occupied sections must not bypass clearance just because the AI says emergency.
-    assert data['payload']['department'] == 'TDMS'
-    if data['payload']['status'] == 'PENDING_REVIEW':
-        assert data['action_triggered'] == 'ANALYZE_GAP'
-        assert 'block_id' not in data['payload']
-        assert data['payload']['planning']['blocking_reasons']
+def test_emergency_never_auto_commits(client):
+    before = app.state.operation_store.list()
+    data = query(client, "Emergency block Surat to Mumbai Central due to OHE wire snag")
+    assert data["action_triggered"] == "NONE"
+    assert data["response_text"].startswith("Please provide")
+    assert "duration" in data["response_text"] and "start time" in data["response_text"]
+    assert "department" not in data["response_text"]  # OHE was classified as TDMS.
+    assert app.state.operation_store.list() == before
+
+
+def test_inspection_does_not_invent_a_position(client):
+    data = query(client, "Inspect real-time status of Train 12953")
+    if data["action_triggered"] == "TRAIN_INSPECT":
+        assert data["fly_to_target"] is not None
+        assert "not live GPS" in data["response_text"]
     else:
-        assert data['action_triggered'] == 'EXECUTE_BLOCK'
-        assert 'block_id' in data['payload']
+        assert data["action_triggered"] == "NONE"
+        assert data["fly_to_target"] is None
+        assert "no modelled position" in data["response_text"] or "not in the loaded timetable" in data["response_text"]
 
 
-def test_dispatcher_train_telemetry_directive(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "Inspect real-time status of Train 12953"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["action_triggered"] == "TRAIN_INSPECT"
-    assert data["fly_to_target"] is not None
-
-
-def test_dispatcher_resequence_directive(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "Resequence corridor traffic according to P1 hierarchy"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["action_triggered"] == "RESEQUENCE"
-
-
-def test_dispatcher_station_info_query(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "tell me about Surat station"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "SURAT" in data["response_text"]
-
-
-def test_dispatcher_corridor_query(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "how long is the western corridor"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "WEST" in data["response_text"] and "km" in data["response_text"]
-
-
-def test_dispatcher_milp_concept_query(client):
-    response = client.post(
-        "/api/v1/chat/dispatcher",
-        json={"message": "explain how the milp optimizer works"},
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert "MILP" in data["response_text"]
+def test_resequence_requires_review(client):
+    data = query(client, "Resequence corridor traffic according to P1 hierarchy")
+    assert data["action_triggered"] == "REVIEW_REQUIRED"
+    assert "Nothing has been changed" in data["response_text"]

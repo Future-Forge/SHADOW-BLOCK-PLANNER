@@ -1,3 +1,7 @@
+> Updated integration and startup: see [repository README](../README.md) and
+> [AI integration handoff](../docs/HANDOFF_AI_INTEGRATION.md).
+> The notes below describe the earlier app-only runtime and are retained for context.
+
 # Shadow Block — GQ Automatic Block Planner Backend
 
 AI-powered automatic railway block planning engine for the Indian

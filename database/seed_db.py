@@ -76,7 +76,7 @@ def get_connection():
     )
 
 def execute_schema(conn):
-    """Execute schema.sql to create/recreate required tables."""
+    """Create missing tables without deleting existing records."""
     logger.info(f"Applying schema from: {SCHEMA_FILE}")
     if not SCHEMA_FILE.exists():
         raise FileNotFoundError(f"Schema file not found at {SCHEMA_FILE}")
@@ -124,13 +124,16 @@ def seed_database():
         
         execute_schema(conn)
 
-        for mapping in TABLE_CSV_MAPPING:
-            bulk_insert_csv(
-                conn,
-                table_name=mapping["table"],
-                csv_path=mapping["csv_file"],
-                columns=mapping["columns"]
-            )
+        if os.getenv("MODE") == "demo":
+            for mapping in TABLE_CSV_MAPPING:
+                bulk_insert_csv(
+                    conn,
+                    table_name=mapping["table"],
+                    csv_path=mapping["csv_file"],
+                    columns=mapping["columns"]
+                )
+        else:
+            logger.info("Demo data not imported. Set MODE=demo to load synthetic CSVs.")
 
         conn.close()
         logger.info("Database seeding completed successfully.")
