@@ -1,6 +1,6 @@
 """Compatibility adapter to the authoritative root AI service; no local model."""
 from ai_engine.contracts import DefectFeatures, CriticalityResult
-from app.ai_engine.client import ai_request
+from app.ai_adapters.client import ai_request
 from fastapi import HTTPException
 
 

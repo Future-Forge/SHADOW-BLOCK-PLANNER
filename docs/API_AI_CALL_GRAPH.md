@@ -1,5 +1,10 @@
 # API / AI call graph
 
+> Folder clarification (2026-10-05): the backend helpers now live in
+> `backend/app/ai_adapters/`. The root `ai_engine/` is the sole model/optimizer
+> service and is required. References to the old backend folder below describe
+> the inspected baseline, not a second engine to run or copy.
+
 ## Existing routes retained
 
 React assistant -> `/api/v1/chat/dispatcher` -> `assistant.process_assistant`.

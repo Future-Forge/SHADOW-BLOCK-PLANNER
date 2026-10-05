@@ -93,7 +93,7 @@ def test_real_root_solver_with_small_fixture(monkeypatch):
     (httpx.Response(500, json={"detail": "failure"}), 502),
 ])
 def test_backend_does_not_fabricate_ai_results(monkeypatch, failure, expected):
-    from app.ai_engine import client as adapter
+    from app.ai_adapters import client as adapter
     mock = Mock()
     mock.__enter__ = Mock(return_value=mock)
     mock.__exit__ = Mock(return_value=False)

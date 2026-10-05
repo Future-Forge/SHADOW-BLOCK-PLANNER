@@ -75,8 +75,14 @@ engine through the frontend proxy, including a repeated non-destructive seed.
 
 ## Ownership and next milestone
 
+There is **one AI engine**, in `ai_engine/`. Keep this folder when downloading or
+extracting the repository: the backend calls it as an internal service. Integration
+does not mean the engine was copied into the backend. The former confusing
+`backend/app/ai_engine/` folder is now named `backend/app/ai_adapters/`.
+
+
 - `ai_engine/`: authoritative model/scorer/OR-Tools; `service.py` is an HTTP wrapper.
-- `backend/app/ai_engine/`: app adapters, not an independent ML model.
+- `backend/app/ai_adapters/`: HTTP connection, chat orchestration and scenario helpers. No model or optimizer lives here.
 - `data/`, `database/`: original dataset and schema, preserved.
 - `frontend/`: existing Vite app, including batch-plan results.
 - [Teammate handoff](docs/HANDOFF_AI_INTEGRATION.md)
