@@ -1,0 +1,26 @@
+name: Full Stack Integration
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  clean-download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose and build clean checkout
+        run: |
+          docker compose config --quiet
+          docker compose up --build --wait --wait-timeout 240
+      - name: Verify real AI and persistent data through frontend proxy
+        run: python tests/compose_smoke.py
+      - name: Logs
+        if: always()
+        run: docker compose logs --no-color --tail=120
+      - name: Remove disposable CI stack
+        if: always()
+        run: docker compose down -v

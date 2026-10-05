@@ -1,32 +1,24 @@
-name: Backend CI
-
+name: Backend and AI CI
 on:
   push:
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
+    paths: ['backend/**', 'ai_engine/**', 'data/**', 'database/**', 'tests/**', 'requirements.txt', '.github/workflows/backend-ci.yml']
   pull_request:
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
-
+    paths: ['backend/**', 'ai_engine/**', 'data/**', 'database/**', 'tests/**', 'requirements.txt', '.github/workflows/backend-ci.yml']
+permissions:
+  contents: read
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          cd backend
-          pip install --upgrade pip
-          pip install -r requirements-dev.txt
-          pip install httpx httpx2 ruff black
-      - name: Lint and Test
-        run: |
-          cd backend
-          export PYTHONPATH=.
-          pytest tests/
+          cache: pip
+      - name: Install app and original AI dependencies
+        run: pip install -r requirements.txt -r backend/requirements-dev.txt
+      - name: Test app, actual model, actual optimizer and failure contracts
+        env:
+          PYTHONPATH: .:backend
+          SHADOW_BLOCK_DB: ':memory:'
+        run: python -m pytest backend/tests tests/test_ai_service.py -q

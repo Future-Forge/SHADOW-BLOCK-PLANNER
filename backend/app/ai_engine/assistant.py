@@ -164,7 +164,7 @@ def process_assistant(payload: DispatcherChatRequest, request: Request):
             result = json.loads(create_dispatcher_tools(ctx)["generate_monthly_report"](*period))
             if "error" in result:
                 return answer(result["error"])
-            return answer(f"{period[0]} {period[1]} report is ready: **{result['row_count']} recorded operations**. This installation reports by commitment month; its in-memory ledger resets when the backend restarts.", "DOWNLOAD_CSV", ctx.payload, "Shadow Block operations ledger")
+            return answer(f"{period[0]} {period[1]} report is ready: **{result['row_count']} recorded operations**. This installation reports by operation month from its persistent simulation ledger.", "DOWNLOAD_CSV", ctx.payload, "Shadow Block operations ledger")
 
         if any(w in q for w in ["reroute", "divert", "overrun", "reschedule", "postpone", "shift block", "move block", "resequence"]):
             return answer("## Controller review required\nThis installation has no verified loop-line topology or block-update API. I cannot safely apply the source engine's placeholder reroutes, overrun orders or reschedules.\n\nSpecify a new section, start time, duration, department and priority to **analyze an alternative window**. Nothing has been changed.", "REVIEW_REQUIRED", source="planner", followups=[EXAMPLES[2]])

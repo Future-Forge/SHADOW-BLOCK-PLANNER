@@ -1,1 +1,1 @@
-"""Local AI_ENGINE integration: trained model + explicit simulation rules."""
+"""Application AI adapters: HTTP inference, chat orchestration and scenario policy."""

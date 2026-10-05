@@ -1,83 +1,93 @@
-version: '3.8'
+x-ai-environment: &ai-environment
+  MODE: ${MODE:-demo}
+  DB_HOST: postgres
+  DB_PORT: 5432
+  DB_NAME: shadow_blockplanner
+  DB_USER: postgres
+  DB_PASSWORD: ${POSTGRES_PASSWORD:-shadow_local_demo}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  PYTHONHASHSEED: 0
 
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: shadow_postgres
-    restart: always
     environment:
       POSTGRES_DB: shadow_blockplanner
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ShadowPL
-    ports:
-      - "5432:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shadow_local_demo}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d shadow_blockplanner"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 20
 
   redis:
     image: redis:7-alpine
-    container_name: shadow_redis
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 20
 
-  api:
+  db-init:
+    build: .
+    environment: *ai-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "database/seed_db.py"]
+
+  ai-service:
+    build: .
+    environment: *ai-environment
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/ready', timeout=15)"]
+      interval: 15s
+      timeout: 20s
+      retries: 20
+      start_period: 20s
+
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: shadow_api
-    restart: always
+      dockerfile: backend/Dockerfile
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: shadow_blockplanner
-      DB_USER: postgres
-      DB_PASSWORD: ShadowPL
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      API_PORT: 8000
+      AI_SERVICE_URL: http://ai-service:8001
+      SHADOW_BLOCK_DB: /app/backend/var/operations.sqlite3
+    volumes:
+      - operations_data:/app/backend/var
+    depends_on:
+      ai-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json, urllib.request; assert json.load(urllib.request.urlopen('http://localhost:8000/api/v1/health'))['status'] == 'ok'"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     ports:
-      - "8000:8000"
+      - "127.0.0.1:5173:80"
     depends_on:
-      postgres:
+      backend:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: ["uvicorn", "ai_engine.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: shadow_worker
-    restart: always
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: shadow_blockplanner
-      DB_USER: postgres
-      DB_PASSWORD: ShadowPL
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: ["python", "ai_engine/run_worker.py"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:
-  redis_data:
+  operations_data:
