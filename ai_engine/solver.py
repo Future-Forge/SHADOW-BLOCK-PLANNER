@@ -546,7 +546,12 @@ class BlockOptimizationEngine:
         """Persist optimized block plans into the PostgreSQL scheduled_blocks table."""
         logger.info(f"Persisting {len(scheduled_blocks)} blocks to PostgreSQL table 'scheduled_blocks'...")
         with self.conn.cursor() as cur:
-            # Clear old proposed blocks
+            # Never erase legacy approved/committed state during demo batch replacement.
+            cur.execute("LOCK TABLE scheduled_blocks IN ACCESS EXCLUSIVE MODE")
+            cur.execute("SELECT count(*) FROM scheduled_blocks WHERE status <> 'PROPOSED'")
+            if cur.fetchone()[0]:
+                raise RuntimeError("Existing non-proposal blocks require controller review before batch replacement.")
+            # Clear only a schedule known to contain proposals.
             cur.execute("TRUNCATE TABLE scheduled_blocks RESTART IDENTITY;")
             
             if scheduled_blocks:

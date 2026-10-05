@@ -11,6 +11,27 @@ FEATURES = dict(defect_age_days=10, ambient_temp_c=44, track_tonnage_mgt=85,
                 speed_restriction_kmh=45, department_type="TMS")
 
 
+def test_fresh_backend_import_does_not_shadow_root_package():
+    import subprocess
+    import sys
+    subprocess.run([sys.executable, "-c",
+        "import sys; sys.path.insert(0, 'backend'); import app.main; "
+        "from ai_engine import contracts; "
+        "assert 'backend' not in str(contracts.__file__)"], check=True)
+
+
+def test_batch_replacement_preserves_existing_approved_blocks():
+    from unittest.mock import MagicMock
+    engine = object.__new__(solver.BlockOptimizationEngine)
+    engine.conn = MagicMock()
+    cursor = engine.conn.cursor.return_value.__enter__.return_value
+    cursor.fetchone.return_value = (1,)
+    with pytest.raises(RuntimeError, match="controller review"):
+        engine.persist_to_postgres([])
+    assert not any("TRUNCATE" in str(call) for call in cursor.execute.call_args_list)
+    engine.conn.commit.assert_not_called()
+
+
 def test_actual_root_model_is_executed(monkeypatch):
     original = xgboost_scorer.predict_defect_criticality
     spy = Mock(wraps=original)

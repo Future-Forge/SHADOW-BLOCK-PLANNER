@@ -16,13 +16,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import sys
 from pathlib import Path
 
-# Ensure both parent directory and current directory are in sys.path so 'app' resolves
+# Resolve both app and the root wire-contract package without shadowing ai_engine.
 _cur_dir = Path(__file__).resolve().parent
 _parent_dir = _cur_dir.parent
-if str(_cur_dir) not in sys.path:
-    sys.path.insert(0, str(_cur_dir))
 if str(_parent_dir) not in sys.path:
     sys.path.insert(0, str(_parent_dir))
+_repo_dir = _parent_dir.parent
+if str(_repo_dir) not in sys.path:
+    sys.path.insert(0, str(_repo_dir))
 
 from app.config import settings
 from app.data.pipeline import build_gq_data_bundle
